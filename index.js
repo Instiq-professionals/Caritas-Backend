@@ -1,9 +1,16 @@
+const config = require('config');
 const Joi = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
 const mongoose = require('mongoose');
 const users = require('./routes/users');
+const auth = require('./routes/auth');
 const express = require('express');
 const app = express();
+
+if(!config.get('jwtPrivateKey')){
+    console.error('FATAL ERROR: jwtPrivateKey is not defined.');
+    process.exit(1);
+}
 
 mongoose.connect('mongodb://localhost/caritas')
     .then(() => console.log('Connected to MongoDB...'))
@@ -11,7 +18,9 @@ mongoose.connect('mongodb://localhost/caritas')
 
 app.use(express.json());
 app.use('/api/users', users);
+app.use('/api/auth', auth);
 
 app.listen(3000, () => console.log(`Listening on port 3000...`));
+
 // const port = process.env.PORT || 3000;
 // app.listen(port, () => console.log(`Listening on port ${port}...`));
