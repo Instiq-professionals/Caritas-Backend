@@ -26,6 +26,61 @@ const userSchema = new mongoose.Schema ({
         unique: true
     },
 
+    role:{
+        type: String,
+        required: true,
+        minlength: 3,
+        maxlength: 255,
+        default: 'user',
+        unique: true
+    },
+
+    isAVolunteer:{
+        type: Boolean,
+        required: true,
+        minlength: 3,
+        maxlength: 8,
+        default: false
+    },
+
+    isEmailVerified:{
+        type: Boolean,
+        required: true,
+        minlength: 3,
+        maxlength: 8,
+        default: false
+    },
+
+    created_by:{
+        type: String,
+        required: false,
+        minlength: 2,
+        maxlength: 50
+    },
+
+    created_at:{
+        type: Date,
+        required: true,
+        default: Date.now,
+        minlength: 2,
+        maxlength: 50
+    },
+
+    updated_at:{
+        type: Date,
+        required: true,
+        default: Date.now,
+        minlength: 2,
+        maxlength: 50
+    },
+
+    deleted_at:{
+        type: Date,
+        required: false,
+        minlength: 2,
+        maxlength: 50
+    },
+
     password:{
         type: String,
         required: true,
