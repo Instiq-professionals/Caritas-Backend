@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const NewsletterSchema = new mongoose.Schema ({
+const newsLetterSchema = new mongoose.Schema ({
     email:{
         type: String,
         required: true,
@@ -39,10 +39,8 @@ const NewsletterSchema = new mongoose.Schema ({
         minlength: 2,
         maxlength: 50
     }
-
 });
 
 
-const Newsletter = mongoose.model('Newsletter', NewsletterSchema);
-
-exports.Newsletter = Newsletter;
+const NewsLetter = mongoose.model('NewsLetter', newsLetterSchema);
+exports.NewsLetter = NewsLetter;

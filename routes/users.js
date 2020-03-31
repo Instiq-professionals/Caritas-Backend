@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const _ = require('lodash');
 const {User, validate} = require('../models/user');
-// const Newsletter = require('../models/NewsletterSubscription');
+const Model = require('../models/NewsletterSubscription');
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
@@ -26,10 +26,9 @@ router.post('/', async (req, res) => {
 
     await user.save();
 
-    // //save email to newsletter table
-    // newsLetterSubscription = new Newsletter(_.pick(req.body, ['email']));
-
-    // newsLetterSubscription.save();
+    //save user email to newsletter document
+    const email =  req.body.email;
+    subscribeForNewsLetter(email);
 
     //generate a token
     const token = user.generateAuthToken();
@@ -38,5 +37,16 @@ router.post('/', async (req, res) => {
 
     // res.send( _.pick(user, ['_id', 'first_name', 'last_name', 'email']));  for normal response without http header (token)
 });
+
+
+// subscribe to newsleter after user registration
+async function subscribeForNewsLetter(email){
+
+    const newsLetterSubscription = new Model.NewsLetter({
+        email: email
+    });
+    await newsLetterSubscription.save();
+}
+
 
 module.exports = router;
