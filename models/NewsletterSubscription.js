@@ -11,9 +11,6 @@ const newsLetterSchema = new mongoose.Schema ({
 
     isSubscribed:{
         type: Boolean,
-        required: true,
-        minlength: 3,
-        maxlength: 8,
         default: true
     },
 
@@ -21,23 +18,17 @@ const newsLetterSchema = new mongoose.Schema ({
         type: Date,
         required: true,
         default: Date.now,
-        minlength: 2,
-        maxlength: 50
     },
 
     updated_at:{
         type: Date,
         required: true,
         default: Date.now,
-        minlength: 2,
-        maxlength: 50
     },
 
     deleted_at:{
         type: Date,
         required: false,
-        minlength: 2,
-        maxlength: 50
     }
 });
 
