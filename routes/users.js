@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const _ = require('lodash');
 const {User, validate} = require('../models/user');
-const Model = require('../models/NewsletterSubscription');
+const NewsLetterModel = require('../models/NewsletterSubscription');
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
 // subscribe to newsleter after user registration
 async function subscribeForNewsLetter(email){
 
-    const newsLetterSubscription = new Model.NewsLetter({
+    const newsLetterSubscription = new NewsLetterModel.NewsLetter({
         email: email
     });
     await newsLetterSubscription.save();
