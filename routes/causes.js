@@ -48,15 +48,7 @@ router.post('/', auth, upload.single('cause_photo'), async (req, res) => {
     cause = new Cause(_.pick(req.body, ['topic', 'description', 'cause_photo', 'amount_required']));
     cause.cause_photo = req.file.path;
     await cause.save();
-
-    // cause = new Cause({
-    //     topic: req.body.topic,
-    //     description: req.body.description,
-    //     cause_photo: req.file.path,
-    //     amount_required: req.body.amount_required        
-    // });
-    // await cause.save();
-
+    
     res.send( _.pick(cause, ['_id', 'topic', 'description', 'cause_photo', 'amount_required']));
 
 });
