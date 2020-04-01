@@ -4,6 +4,7 @@ Joi.objectId = require('joi-objectid')(Joi);
 const mongoose = require('mongoose');
 const users = require('./routes/users');
 const auth = require('./routes/auth');
+const causes = require('./routes/causes');
 const express = require('express');
 const app = express();
 
@@ -21,8 +22,10 @@ mongoose.connect('mongodb://localhost/caritas')
 
 //routes
 app.use(express.json());
+app.use(express.static('uploads'));
 app.use('/api/users', users);
 app.use('/api/auth', auth);
+app.use('/api/cause', causes);
 
 //listen on app port
 // app.listen(3000, () => console.log(`Listening on port 3000...`));

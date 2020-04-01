@@ -5,7 +5,6 @@ const newsLetterSchema = new mongoose.Schema ({
         type: String,
         required: true,
         minlength: 3,
-        maxlength: 255,
         unique: true
     },
 
@@ -16,19 +15,16 @@ const newsLetterSchema = new mongoose.Schema ({
 
     created_at:{
         type: Date,
-        required: true,
         default: Date.now,
     },
 
     updated_at:{
         type: Date,
-        required: true,
         default: Date.now,
     },
 
     deleted_at:{
-        type: Date,
-        required: false,
+        type: Date
     }
 });
 
