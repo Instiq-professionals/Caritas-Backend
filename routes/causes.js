@@ -52,7 +52,6 @@ router.post('/', auth, upload.single('cause_photo'), async (req, res) => {
         cause = new Cause(_.pick(req.body, ['topic', 'description', 'cause_photo', 'amount_required', 'category', 'created_by']));
         cause.cause_photo = req.file.path;
         cause.created_by = req.user._id;
-        console.log(cause.created_by);
 
         await cause.save();
 
@@ -64,14 +63,33 @@ router.post('/', auth, upload.single('cause_photo'), async (req, res) => {
 
 });
 
-// Edit cause
-router.put('/:id', auth, async (req, res) => {
-    console.log(req.body._id);
+// Edit cause for cause creator only
+router.put('/edit/:id', auth, upload.single('cause_photo'), async (req, res) => {
+    // get the cause by id supplied
+    const cause = await Cause.findById(req.params.id);
+    if(!cause) return res.status(404).send('No cause with the given ID was not found.');
+
+    //check if user_id === cause creator
+    if(cause.created_by !== req.user._id) return res.status(403).send('Access denied.');
+
+    // validate request data
+    const { error } = validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    //save data in the user table
+    cause.cause_photo = req.file.path;
+    cause.topic = req.body.topic;
+    cause.description = req.body.description;
+    cause.amount_required = req.body.amount_required;
+    cause.category = req.body.category;
+    cause.updated_at = Date.now();
+
+    res.send( _.pick(cause, ['_id', 'topic', 'description', 'cause_photo', 'amount_required', 'category']));
 });
 
 // Read all causes
 router.put('/:id', auth, async (req, res) => {
-    //check if user_id === cause creator
+    
     console.log(req.body._id);
 });
 
