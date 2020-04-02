@@ -45,7 +45,7 @@ const upload = multer({
 
 // create cause
 // [auth, isAdmin]
-router.post('/', auth, upload.single('cause_photo'), async (req, res) => { 
+router.post('/create', auth, upload.single('cause_photo'), async (req, res) => { 
 
     try{
         
@@ -109,7 +109,30 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Delete cause (soft delete)
+// fetch all causes
+router.get('/', async (req, res) => {
+    try{
+        // get the cause by id supplied
+        const cause = await Cause.find().sort({created_at: 1}).select({
+            topic: 1,
+            id: 1,
+            description: 1,
+            cause_photo: 1,
+            amount_required: 1,
+            category: 1,
+            created_at: 1
+        });
+        if(!cause) return res.status(404).send('No cause found.');
+
+        return res.send(cause);
+    }catch(e){
+        console.log(e);
+    }
+});
+
+
+
+// Delete cause (soft delete) for cause creator only
 router.put('/delete/:id', auth, async (req, res) => {
     try{
         // get the cause by id supplied
