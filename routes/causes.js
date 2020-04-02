@@ -76,7 +76,7 @@ router.put('/edit/:id', auth, upload.single('cause_photo'), async (req, res) => 
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    //save data in the user table
+    //update cause data
     cause.cause_photo = req.file.path;
     cause.topic = req.body.topic;
     cause.description = req.body.description;
