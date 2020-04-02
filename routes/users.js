@@ -48,5 +48,4 @@ async function subscribeForNewsLetter(email){
     await newsLetterSubscription.save();
 }
 
-
 module.exports = router;

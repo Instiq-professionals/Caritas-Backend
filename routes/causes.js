@@ -41,15 +41,24 @@ const upload = multer({
 // create cause
 router.post('/', auth, upload.single('cause_photo'), async (req, res) => { 
 
-    // validate request data
-    const { error } = validate(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
-    //save data in the user table
-    cause = new Cause(_.pick(req.body, ['topic', 'description', 'cause_photo', 'amount_required']));
-    cause.cause_photo = req.file.path;
-    await cause.save();
+    try{
+        
+        // validate request data
+        const { error } = validate(req.body);
+        if (error) return res.status(400).send(error.details[0].message);
+        //save data in the user table
+        cause = new Cause(_.pick(req.body, ['topic', 'description', 'cause_photo', 'amount_required', 'category', 'created_by']));
+        cause.cause_photo = req.file.path;
+        cause.created_by = req.user._id;
+        console.log(cause.created_by);
+
+        await cause.save();
+
+        res.send( _.pick(cause, ['_id', 'topic', 'description', 'cause_photo', 'amount_required', 'category']));
     
-    res.send( _.pick(cause, ['_id', 'topic', 'description', 'cause_photo', 'amount_required']));
+    }catch(e){
+        console.log(e);
+    }
 
 });
 
@@ -58,7 +67,13 @@ router.put('/:id', auth, async (req, res) => {
     console.log(req.body._id);
 });
 
-// Delete cause (soft delete)
+// Read all causes
+router.put('/:id', auth, async (req, res) => {
+    //check if user_id === cause creator
+    console.log(req.body._id);
+});
+
+// Read all causes (paginated)
 router.put('/:id', auth, async (req, res) => {
     //check if user_id === cause creator
     console.log(req.body._id);

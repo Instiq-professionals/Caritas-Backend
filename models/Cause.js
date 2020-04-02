@@ -24,8 +24,13 @@ const causeSchema = new mongoose.Schema ({
         required: true
     },
 
+    category:{
+        type: String,
+        required: true
+    },
+
     created_by:{
-        type: String
+        type: String,
     },
 
     created_at:{
@@ -86,6 +91,8 @@ function validateCause(cause){
         topic: Joi.string().min(3).required(),
         description: Joi.string().min(20).required(),
         amount_required: Joi.number().required(),
+        category: Joi.string().required(),
+        // created_by: Joi.string().required()
     };
 
     return Joi.validate(cause, schema);

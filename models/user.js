@@ -26,13 +26,12 @@ const userSchema = new mongoose.Schema ({
         unique: true
     },
 
-    role:{
-        type: String,
+    role_id:{
+        type: [String],
         required: true,
         minlength: 3,
         maxlength: 255,
-        default: 'user',
-        unique: true
+        default: ['5e8535a762580929e05d8af7'],
     },
 
     isAVolunteer:{
@@ -90,7 +89,7 @@ const userSchema = new mongoose.Schema ({
 });
 
 userSchema.methods.generateAuthToken = function(){
-    const token = jwt.sign({_id: this._id}, config.get('jwtPrivateKey'));
+    const token = jwt.sign({_id: this._id, role_id: this.role_id}, config.get('jwtPrivateKey'));
 
     return token;
 };
