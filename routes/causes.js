@@ -1,4 +1,5 @@
 const auth = require('../middleware/auth');
+const isAdmin = require('../middleware/isAdmin');
 const _ = require('lodash');
 const {Cause, validate} = require('../models/Cause');
 const express = require('express');
@@ -39,6 +40,7 @@ const upload = multer({
 //const upload = multer({dest: 'uploads/'});
 
 // create cause
+// [auth, isAdmin]
 router.post('/', auth, upload.single('cause_photo'), async (req, res) => { 
 
     try{

@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
     if (user) return res.status(400).send('This Email already exists in our database');
 
     //save data in the user table
-    user = new User(_.pick(req.body, ['first_name', 'last_name', 'email', 'password']));
+    user = new User(_.pick(req.body, ['first_name', 'last_name', 'email', 'password', 'role']));
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(user.password, salt);
 
