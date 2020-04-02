@@ -31,6 +31,7 @@ const causeSchema = new mongoose.Schema ({
 
     created_by:{
         type: String,
+        default: null,
     },
 
     created_at:{
@@ -40,34 +41,42 @@ const causeSchema = new mongoose.Schema ({
 
     isApproved:{
         type: Boolean,
+        default: null,
     },
     
     approved_by:{
-        type: String
+        type: String,
+        default: null,
     },
 
     approved_at:{
-        type: Date
+        type: Date,
+        default: null,
     },
 
     reason_for_disapproval:{
         type: String,
+        default: null,
     },
 
     isVoted:{
         type: Boolean,
+        default: null,
     },
 
     isResolved:{
-        type: Boolean
+        type: Boolean,
+        default: null,
     },
 
     marked_as_resolved_by:{
-        type: String
+        type: String,
+        default: null,
     },
 
     resolved_at:{
-        type: Date
+        type: Date,
+        default: null,
     },
 
     updated_at:{
@@ -77,10 +86,12 @@ const causeSchema = new mongoose.Schema ({
 
     deleted_at:{
         type: Date,
+        default: null,
     },
 
     deleted_by:{
         type: String,
+        default: null,
     },
 });
 
@@ -92,7 +103,19 @@ function validateCause(cause){
         description: Joi.string().min(20).required(),
         amount_required: Joi.number().required(),
         category: Joi.string().required(),
-        // created_by: Joi.string().required()
+        created_by: Joi.string(),
+        created_at: Joi.string(),
+        isApproved: Joi.boolean(),
+        approved_by: Joi.string(),
+        approved_at: Joi.string(),
+        reason_for_disapproval: Joi.string(),
+        isVoted: Joi.boolean(),
+        isResolved: Joi.boolean(),
+        marked_as_resolved_by: Joi.string(),
+        resolved_at: Joi.string(),
+        updated_at: Joi.string(),
+        deleted_at: Joi.string(),
+        deleted_by: Joi.string(),
     };
 
     return Joi.validate(cause, schema);
