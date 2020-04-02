@@ -96,6 +96,19 @@ router.put('/edit/:id', auth, upload.single('cause_photo'), async (req, res) => 
     }
 });
 
+// fetch single cause
+router.get('/:id', async (req, res) => {
+    try{
+        // get the cause by id supplied
+        const cause = await Cause.findById(req.params.id);
+        if(!cause) return res.status(404).send('No cause with the given ID was not found.');
+
+        return res.send( _.pick(cause, ['_id', 'topic', 'description', 'cause_photo', 'amount_required', 'category', 'created_at' ]));
+    }catch(e){
+        console.log(e);
+    }
+});
+
 // Delete cause (soft delete)
 router.put('/delete/:id', auth, async (req, res) => {
     try{
