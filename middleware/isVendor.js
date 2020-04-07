@@ -1,9 +1,9 @@
 module.exports = function (req, res, next){
-
-    if (req.user.role !== "Vendor") return res.status(403).json({
+    const vendor = req.user.role.includes("Vendor");
+    if (!vendor) return res.status(403).json({
         status: 'Forbidden',
        message: 'Access denied.',
     });
-
+    
     next();
-};
+}; 

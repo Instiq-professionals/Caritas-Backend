@@ -1,11 +1,51 @@
 const auth = require('../middleware/auth');
 const isAdmin = require('../middleware/isAdmin');
+const isModerator = require('../middleware/isModerator');
 const _ = require('lodash');
 const {Cause, validate} = require('../models/Cause');
 const {User} = require('../models/user');
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+
+
+/*
+=================================================================================
+                        fetch all causes for approval
+=================================================================================
+*/
+
+router.get('/approve_causes',[auth, isModerator], async (req, res) => {
+    try{
+        // get all unapproved causes
+        const cause = await Cause.find({deleted_at: null, approved_at: null}).sort({created_at: 1})
+        .select({
+            cause_title: 1,
+            brief_description: 1, 
+            charity_information: 1,
+            additional_information: 1,
+            cause_photos: 1, 
+            cause_video: 1,
+            amount_required: 1,
+            category: 1,
+            created_at: 1
+        });
+
+        if(cause == 0) return res.status(404).json({
+            status: 'Not found',
+            message: 'No cause found.',
+        });
+
+        // return res.send(cause);
+        res.status(200).json({
+            status: 'success',
+            data:  cause,
+        });
+
+    }catch(e){
+        console.log(e);
+    }
+});
 
 /*
 =================================================================================
@@ -245,7 +285,6 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-
 /*
 =================================================================================
                         fetch all approved causes
@@ -283,6 +322,7 @@ router.get('/', async (req, res) => {
         console.log(e);
     }
 });
+
 
 /*
 =================================================================================

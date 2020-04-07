@@ -90,12 +90,12 @@ const causeSchema = new mongoose.Schema ({
         default: false,
     },
     
-    approved_by:{
+    approved_or_disapproved_by:{
         type: String,
         default: null,
     },
 
-    approved_at:{
+    approved_or_disapproved_at:{
         type: Date,
         default: null,
     },

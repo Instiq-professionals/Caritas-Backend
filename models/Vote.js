@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const voteSchema = new mongoose.Schema ({
+    _id:{
+        type: String
+    },
+    
     voter_id:{
         type: String,
         required: true,
