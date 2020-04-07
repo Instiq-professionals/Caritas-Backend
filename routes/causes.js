@@ -57,14 +57,18 @@ var causeMediaUpload = upload.fields([{ name: 'cause_photos', maxCount: 6 }, { n
 router.post('/create', auth, causeMediaUpload, async (req, res) => { 
 
     try{
-        const cause_photoss = req.files.cause_photoss;
+        const cause_photos = req.files.cause_photos;
 
         // console.log(cause_photos.map(['path']));
-        console.log (req.files.cause_photos.length);
+        console.log (cause_photos.length);
+        console.log (cause_photos[0].path);
+        console.log (cause_photos);
+        console.log (req.files.cause_video[0].path);
+
 
         let photos = [];
-        for (let i = 0; i <= req.files.cause_photos.length; i++){
-            photos.push(req.files.cause_photos[i].path);
+        for (let i = 0; i <= cause_photos.length; i++){
+            photos.push(cause_photos[i].path); //err path undefined
         }
         console.log (photos);
 
@@ -81,7 +85,7 @@ router.post('/create', auth, causeMediaUpload, async (req, res) => {
         // //save data in the user table
         // cause = new Cause(_.pick(req.body, ['topic', 'description', 'cause_photos', 'cause_video', 'amount_required', 'category', 'created_by']));
         // cause.cause_photos = req.files.cause_photos;
-        // cause.cause_video = req.files.cause_video;
+        // cause.cause_video = req.files.cause_video[0].path;
         // cause.created_by = req.user._id;
 
         // await cause.save();

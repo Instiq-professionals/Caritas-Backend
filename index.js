@@ -6,6 +6,7 @@ const users = require('./routes/users');
 const roles = require('./routes/roles');
 const causes = require('./routes/causes');
 const express = require('express');
+const cors = require('cors');
 const app = express();
 
 
@@ -21,6 +22,7 @@ mongoose.connect('mongodb://localhost/caritas')
     .catch(err => console.error('Could not connect to MongoDB...', err));
 
 //routes
+app.use(cors());
 app.use(express.json());
 app.use(express.static('uploads'));
 app.use('/api/users', users);
