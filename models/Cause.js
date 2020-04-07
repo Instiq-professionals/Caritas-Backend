@@ -168,7 +168,6 @@ function validateCause(cause){
         isResolved: Joi.boolean(),
         marked_as_resolved_by: Joi.string(),
         resolved_at: Joi.string(),
-        updated_at: Joi.string(),
         deleted_at: Joi.string(),
         deleted_by: Joi.string(),
     };
