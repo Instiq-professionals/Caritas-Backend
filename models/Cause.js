@@ -2,19 +2,56 @@ const Joi = require('joi');
 const mongoose = require('mongoose');
 
 const causeSchema = new mongoose.Schema ({
-    topic:{
+    cause_title:{
         type: String,
         required: true,
-        minlength: 3,
     },
 
-    description:{
+    brief_description:{
         type: String,
         required: true,
-        minlength: 20,
     },
 
-    cause_photo:{
+    account_number:{
+        type: Number,
+    },
+
+    charity_information:{
+        type: String,
+        required: true,
+    },
+
+    additional_information:{
+        type: String,
+        required: true,
+    },
+
+    accept_comments_and_reviews:{
+        type: Boolean,
+        default: true
+    },
+
+    watch_cause:{
+        type: Boolean,
+        default: true
+    },
+
+    cause_fund_visibility:{
+        type: Boolean,
+        default: true
+    },
+
+    share_on_social_media:{
+        type: Boolean,
+        default: true
+    },
+
+    cause_photos:{
+        type: [String],
+        required: true,
+    },
+
+    cause_video:{
         type: String,
         required: true,
     },
@@ -24,6 +61,16 @@ const causeSchema = new mongoose.Schema ({
         required: true
     },
 
+    number_of_votes:{
+        type: Number,
+        default: 0
+    },
+
+    amount_donated:{
+        type: Number,
+        default: 0
+    },
+
     category:{
         type: String,
         required: true
@@ -31,7 +78,6 @@ const causeSchema = new mongoose.Schema ({
 
     created_by:{
         type: String,
-        default: null,
     },
 
     created_at:{
@@ -41,7 +87,7 @@ const causeSchema = new mongoose.Schema ({
 
     isApproved:{
         type: Boolean,
-        default: null,
+        default: false,
     },
     
     approved_by:{
@@ -61,12 +107,12 @@ const causeSchema = new mongoose.Schema ({
 
     isVoted:{
         type: Boolean,
-        default: null,
+        default: false,
     },
 
     isResolved:{
         type: Boolean,
-        default: null,
+        default: false,
     },
 
     marked_as_resolved_by:{
@@ -99,9 +145,18 @@ const Cause = mongoose.model('Cause', causeSchema);
 
 function validateCause(cause){
     const schema = {
-        topic: Joi.string().min(3).required(),
-        description: Joi.string().min(20).required(),
+        cause_title: Joi.string().required(),
+        brief_description: Joi.string().required(),
+        charity_information: Joi.string().required(),
+        additional_information: Joi.string(),
+        account_number: Joi.number(),
+        accept_comments_and_reviews: Joi.boolean(),
+        watch_cause: Joi.boolean(),
+        cause_fund_visibility: Joi.boolean(),
+        share_on_social_media: Joi.boolean(),
         amount_required: Joi.number().required(),
+        number_of_votes: Joi.number(),
+        amount_donated: Joi.number(),
         category: Joi.string().required(),
         created_by: Joi.string(),
         created_at: Joi.string(),

@@ -29,55 +29,36 @@ const userSchema = new mongoose.Schema ({
     role:{
         type: [String],
         required: true,
-        minlength: 3,
-        maxlength: 255,
         default: ['User'],
     },
 
     isAVolunteer:{
         type: Boolean,
-        required: true,
-        minlength: 3,
-        maxlength: 8,
         default: false
     },
 
     isEmailVerified:{
         type: Boolean,
-        required: true,
-        minlength: 3,
-        maxlength: 8,
         default: false
     },
 
     created_by:{
         type: String,
-        required: false,
-        minlength: 2,
-        maxlength: 50
+        default: null
     },
 
     created_at:{
         type: Date,
-        required: true,
-        default: Date.now,
-        minlength: 2,
-        maxlength: 50
+        default: Date.now
     },
 
     updated_at:{
         type: Date,
-        required: true,
-        default: Date.now,
-        minlength: 2,
-        maxlength: 50
+        default: Date.now
     },
 
     deleted_at:{
-        type: Date,
-        required: false,
-        minlength: 2,
-        maxlength: 50
+        type: Date
     },
 
     password:{
@@ -85,6 +66,10 @@ const userSchema = new mongoose.Schema ({
         required: true,
         minlength: 8,
         maxlength: 1024
+    },
+
+    password_reset_token:{
+        type: String
     }
 });
 

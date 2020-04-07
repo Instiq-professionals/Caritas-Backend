@@ -1,19 +1,32 @@
 const auth = require('../middleware/auth');
+const admin = require('../middleware/isAdmin');
 const _ = require('lodash');
 const {Role, validate} = require('../models/Role');
 const express = require('express');
 const router = express.Router();
 
-router.post('/', auth, async (req, res) => {
+
+/*
+=================================================================================
+                        Create Role Admin only
+=================================================================================
+*/
+router.post('/create', auth, admin, async (req, res) => {
     
     try{
         // validate request data
         const { error } = validate(req.body);
-        if (error) return res.status(400).send(error.details[0].message);
+        if (error) return res.status(400).json({
+            status: '400 Bad request',
+            message: error.details[0].message,
+        });
 
-        //check if email already registered
+        //check if role has already been created
         let role = await Role.findOne({ role: req.body.role });
-        if (role) return res.status(400).send('This Role already exists');
+        if (role) return res.status(400).json({
+            status: '400 Bad request',
+            message: 'This Role already exists',
+        });
 
         //save data in the role table
         role = new Role(_.pick(req.body, ['role', 'created_by']));
@@ -21,7 +34,12 @@ router.post('/', auth, async (req, res) => {
 
         await role.save();
 
-        res.send( _.pick(role, ['_id', 'role']));
+        res.status(200).json({
+            status: 'Success',
+            message: 'The Role has been created successfully!',
+            data:  _.pick(role, ['_id', 'role']),
+        });
+
     }catch(e){
         console.log(e);
     }
