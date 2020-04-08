@@ -1,10 +1,6 @@
 const mongoose = require('mongoose');
 
 const causeFollowerSchema = new mongoose.Schema ({
-    _id:{
-        type: String
-    },
-    
     user_id:{
         type: String,
         required: true,

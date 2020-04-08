@@ -86,8 +86,9 @@ const causeSchema = new mongoose.Schema ({
     },
 
     isApproved:{
-        type: Boolean,
-        default: false,
+        type: Number,
+        default: 0,
+        maxlength: 1
     },
     
     approved_or_disapproved_by:{
@@ -106,13 +107,15 @@ const causeSchema = new mongoose.Schema ({
     },
 
     isVoted:{
-        type: Boolean,
-        default: false,
+        type: Number,
+        default: 0,
+        maxlength: 1
     },
 
     isResolved:{
-        type: Boolean,
-        default: false,
+        type: Number,
+        default: 0,
+        maxlength: 1
     },
 
     marked_as_resolved_by:{
