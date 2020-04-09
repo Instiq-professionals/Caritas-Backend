@@ -2,10 +2,6 @@ const Joi = require('joi');
 const mongoose = require('mongoose');
 
 const roleSchema = new mongoose.Schema ({
-    _id:{
-        type: String
-    },
-    
     role:{
         type: String,
         required: true,

@@ -2,10 +2,6 @@ const Joi = require('joi');
 const mongoose = require('mongoose');
 
 const donationSchema = new mongoose.Schema ({
-    _id:{
-        type: String
-    },
-    
     donor_id:{
         type: String,
         required: true,

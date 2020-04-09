@@ -53,7 +53,6 @@ const causeSchema = new mongoose.Schema ({
 
     cause_video:{
         type: String,
-        required: true,
     },
 
     amount_required:{

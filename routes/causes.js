@@ -48,6 +48,46 @@ router.get('/approve_causes',[auth, isModerator], async (req, res) => {
     }
 });
 
+
+
+/*
+=================================================================================
+                        Approve causes  
+                        Problem: not getting req.body (its returning an empty array)
+=================================================================================
+*/
+
+// router.put('/approve/:id', auth, isModerator, async (req, res) => {
+//     try {
+//         console.log(req.body);
+//         // get the cause by id supplied
+//         const cause = await Cause.findById(req.params.id);
+
+//         if(cause == 0) return res.status(404).json({
+//             status: 'Not found',
+//             message: 'No cause with the given ID was not found.',
+//         });
+
+//         //update cause data
+//         cause.isApproved = req.body.isApproved;
+//         cause.approved_or_disapproved_by = req.user._id;
+//         cause.approved_or_disapproved_at = Date.now();
+//         cause.reason_for_disapproval = req.body.reason_for_disapproval;
+//         cause.updated_at = Date.now();
+//         await cause.save();
+
+//         return res.status(200).json({
+//             status: 'success',
+//             message: 'The cause has been Approved/Disapproved!',
+//             data: _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
+//                 'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at'
+//             ]),
+//         });
+//     } catch (error) {
+//         console.log(error);
+//     }
+// });
+
 /*
 =================================================================================
                         Create Cause
@@ -76,7 +116,7 @@ const fileFilter = (req, file, cb) => {
 
             cb(null, true);
         }else{
-            cb('Please upload an image or a video', false);
+            cb('Sorry, this form accepts only videos or images', false);
         }
     } catch (error) {
         handleError(error, res);
@@ -125,7 +165,20 @@ router.post('/create', auth, causeMediaUpload, async (req, res) => {
         });
 
         cause.cause_photos = causePhotos;
-        cause.cause_video = req.files.cause_video[0].path;
+
+        //check if request has video
+        const checkForCauseVideo = req.files.cause_video == null;
+        if(!checkForCauseVideo){
+            if(req.files.cause_video[0].mimetype == 'video/mp4'){
+                cause.cause_video = req.files.cause_video[0].path;
+            }else{
+                return res.status(400).json({
+                    status: 'Bad request',
+                    message: 'Cause_video must be a Video'
+                });
+            }
+            
+        }
         cause.created_by = req.user._id;
         
 
@@ -205,15 +258,7 @@ router.put('/edit/:id', auth, causeMediaUpload, async (req, res) => {
         //check if user_id === cause creator
         if(cause.created_by !== req.user._id) return res.status(403).json({
             status: 'Access denied',
-            message: "Sorry, you don't have access to edit this resource",
-        });
-
-        // validate request data
-        const { error } = validate(req.body);
-
-        if(error) return res.status(400).json({
-            status: 'Bad request',
-            message: error.details[0].message,
+            message: "Sorry, you don't have permission to edit this resource",
         });
 
         //update cause data
@@ -226,7 +271,21 @@ router.put('/edit/:id', auth, causeMediaUpload, async (req, res) => {
         cause.watch_cause = req.body.watch_cause;
         cause.cause_fund_visibility = req.body.cause_fund_visibility;
         cause.share_on_social_media = req.body.share_on_social_media;
-        cause.cause_video = req.files.cause_video[0].path;
+
+        //check if request has video
+        const checkForCauseVideo = req.files.cause_video == null;
+        if(!checkForCauseVideo){
+            if(req.files.cause_video[0].mimetype == 'video/mp4'){
+                cause.cause_video = req.files.cause_video[0].path;
+            }else{
+                return res.status(400).json({
+                    status: 'Bad request',
+                    message: 'Cause_video must be a Video'
+                });
+            }
+            
+        }
+        cause.cause_video = null;
 
         //Get cause_photo paths and store in an array
         const photos = req.files.cause_photos;
@@ -353,7 +412,7 @@ router.get('/:id', async (req, res) => {
 router.get('/', async (req, res) => {
     try{
         // get all causes
-        const cause = await Cause.find({deleted_at: null, isApproved: true}).sort({created_at: 1})
+        const cause = await Cause.find({deleted_at: null, isApproved: 1}).sort({created_at: 1})
         .select({
             cause_title: 1,
             brief_description: 1, 
