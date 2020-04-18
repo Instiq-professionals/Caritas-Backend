@@ -1,11 +1,7 @@
+const Joi = require('joi');
 const mongoose = require('mongoose');
 
 const successStorySchema = new mongoose.Schema ({
-    user_id:{
-        type: String,
-        required: true,
-    },
-
     cause_id:{
         type: String,
         required: true,
@@ -14,6 +10,10 @@ const successStorySchema = new mongoose.Schema ({
     testimonial:{
         type: String,
         required: true,
+    },
+
+    created_by:{
+        type: String
     },
 
     created_at:{
@@ -39,4 +39,13 @@ const successStorySchema = new mongoose.Schema ({
 
 const SuccessStory = mongoose.model('SuccessStory', successStorySchema);
 
+function validateStory(story){
+    const schema = {
+        testimonial: Joi.string().required(),
+    };
+
+    return Joi.validate(story, schema);
+} 
+
+exports.validate = validateStory;
 exports.SuccessStory = SuccessStory;

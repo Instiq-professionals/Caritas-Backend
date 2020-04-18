@@ -9,6 +9,7 @@ const app = express();
 const users = require('./routes/users');
 const roles = require('./routes/roles');
 const causes = require('./routes/causes');
+const stories = require('./routes/successStories');
 
 
 //check if JWT secrete key is set
@@ -32,6 +33,7 @@ app.use(express.static('uploads'));
 app.use('/api/users', users);
 app.use('/api/roles', roles);
 app.use('/api/cause', causes);
+app.use('/api/success_stories', stories);
 
 //listen on app port
 // app.listen(3000, () => console.log(`Listening on port 3000...`));

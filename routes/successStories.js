@@ -1,8 +1,8 @@
 const auth = require('../middleware/auth');
 const isModerator = require('../middleware/isModerator');
 const _ = require('lodash');
-const {Cause, validate} = require('../models/Cause');
-const {SuccessStory} = require('../models/SuccessStory');
+const {Cause} = require('../models/Cause');
+const {SuccessStory, validate} = require('../models/SuccessStory');
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -56,9 +56,24 @@ router.get('/approve_causes',[auth, isModerator], async (req, res) => {
 */
 
 // [auth, isAdmin]
-router.post('/create', auth, async (req, res) => { 
+router.post('/create/:id', auth, async (req, res) => { 
 
     try{
+        // get the cause by id supplied
+        const cause = await Cause.findById(req.params.id);
+
+        if(cause == null) return res.status(404).json({
+            status: 'Not found',
+            message: 'No cause with the given ID was not found.',
+            data:[]
+        });
+
+        //check if user_id === cause creator
+        if(cause.created_by !== req.user._id) return res.status(403).json({
+            status: 'Access denied',
+            message: "Sorry, you don't have permission to write a success story for this cause",
+            data:[]
+        });
 
         //validate request data
         const { error } = validate(req.body);
@@ -72,36 +87,9 @@ router.post('/create', auth, async (req, res) => {
          ============================
         */
 
-        cause = new Cause(_.pick(req.body, [
-            'cause_title', 'brief_description', 'charity_information','additional_information', 
-            'account_number', 'accept_comments_and_reviews', 'watch_cause', 'cause_fund_visibility', 
-            'share_on_social_media', 'cause_photos', 'cause_video', 'amount_required', 'category', 'created_by'
+        story = new SuccessStory(_.pick(req.body, [
+            'cause_id', 'testimonial', 'created_at', 'created_by'
         ]));
-
-        //Get cause_photo paths and store in an array
-        const photos = req.files.cause_photos;
-        const causePhotos = [];
-
-        photos.forEach(photo => {
-            causePhotos.push(photo.path);
-        });
-
-        cause.cause_photos = causePhotos;
-
-        //check if request has video
-        const checkForCauseVideo = req.files.cause_video == null;
-        if(!checkForCauseVideo){
-            if(req.files.cause_video[0].mimetype == 'video/mp4'){
-                cause.cause_video = req.files.cause_video[0].path;
-            }else{
-                return res.status(400).json({
-                    status: 'Bad request',
-                    message: 'Cause_video must be a Video',
-                    data:[]
-                });
-            }
-            
-        }
         cause.created_by = req.user._id;
         
 
@@ -109,11 +97,8 @@ router.post('/create', auth, async (req, res) => {
 
         return res.status(200).json({
             status: 'success',
-            message: 'Your Cause has been successfully created!',
-            data: _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
-            'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
-            'amount_donated'
-            ]),
+            message: 'Your story has been recorded successfully!',
+            data: _.pick(cause, ['_id', 'cause_id', 'testimonial', 'created_at', 'created_by']),
         });
     
     }catch(e){
@@ -170,7 +155,7 @@ router.get('/my_causes', auth, async (req, res) => {
 =================================================================================
 */
 
-router.put('/edit/:id', auth, causeMediaUpload, async (req, res) => {
+router.put('/edit/:id', auth, async (req, res) => {
     try {
         // get the cause by id supplied
         const cause = await Cause.findById(req.params.id);
