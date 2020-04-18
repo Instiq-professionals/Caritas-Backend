@@ -1,3 +1,4 @@
 {
-    "jwtPrivateKey": "secret(toBeChangedLater)"
+    "jwtPrivateKey": "secret(toBeChangedLater)",
+    "emailPassword": "Instiq2020"
 }

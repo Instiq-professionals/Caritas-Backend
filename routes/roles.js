@@ -11,7 +11,7 @@ const router = express.Router();
                         Create Role Admin only
 =================================================================================
 */
-router.post('/create', auth, admin, async (req, res) => {
+router.post('/create', [auth, admin], async (req, res) => {
     
     try{
         // validate request data
@@ -19,6 +19,7 @@ router.post('/create', auth, admin, async (req, res) => {
         if (error) return res.status(400).json({
             status: '400 Bad request',
             message: error.details[0].message,
+            data:[]
         });
 
         //check if role has already been created
@@ -26,6 +27,7 @@ router.post('/create', auth, admin, async (req, res) => {
         if (role) return res.status(400).json({
             status: '400 Bad request',
             message: 'This Role already exists',
+            data:[]
         });
 
         //save data in the role table

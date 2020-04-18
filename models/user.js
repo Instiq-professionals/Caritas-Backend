@@ -26,6 +26,31 @@ const userSchema = new mongoose.Schema ({
         unique: true
     },
 
+    address:{
+        type: String,
+        required: true
+    },
+
+    phone_number:{
+        type: String,
+        required: true
+    },
+
+    bank_name:{
+        type: String,
+        required: true
+    },
+
+    account_number:{
+        type: Number,
+        required: true
+    },
+
+    account_type:{
+        type: String,
+        required: true
+    },
+
     role:{
         type: [String],
         required: true,
@@ -70,6 +95,9 @@ const userSchema = new mongoose.Schema ({
 
     password_reset_token:{
         type: String
+    },
+    password_reset_token_expires_on:{
+        type: Date
     }
 });
 
@@ -88,6 +116,11 @@ function validateUser(user){
         email: Joi.string().min(5).max(255).required(),
         password: Joi.string().min(8).max(255).required(),
         role: Joi.string(),
+        address: Joi.string().required(),
+        phone_number: Joi.string().required(),
+        bank_name: Joi.string().required(),
+        account_number: Joi.number().required(),
+        account_type: Joi.string().required(),
     };
 
     return Joi.validate(user, schema);

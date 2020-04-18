@@ -5,6 +5,7 @@ const _ = require('lodash');
 const {Cause, validate} = require('../models/Cause');
 const {User} = require('../models/user');
 const {Vote} = require('../models/Vote');
+const {Donation} = require('../models/Donation');
 const {CauseFollowers} = require('../models/CauseFollower'); 
 const express = require('express');
 const router = express.Router();
@@ -20,7 +21,7 @@ const multer = require('multer');
 router.get('/approve_causes',[auth, isModerator], async (req, res) => {
     try{
         // get all unapproved causes
-        const cause = await Cause.find({deleted_at: null, approved_at: null}).sort({created_at: 1})
+        const cause = await Cause.find({deleted_at: null}).sort({created_at: 1})
         .select({
             cause_title: 1,
             brief_description: 1, 
@@ -36,6 +37,7 @@ router.get('/approve_causes',[auth, isModerator], async (req, res) => {
         if(cause == 0) return res.status(404).json({
             status: 'Not found',
             message: 'No cause found.',
+            data:[]
         });
 
         return res.status(200).json({
@@ -53,40 +55,41 @@ router.get('/approve_causes',[auth, isModerator], async (req, res) => {
 /*
 =================================================================================
                         Approve causes  
-                        Problem: not getting req.body (its returning an empty array)
 =================================================================================
 */
 
-// router.put('/approve/:id', auth, isModerator, async (req, res) => {
-//     try {
-//         console.log(req.body);
-//         // get the cause by id supplied
-//         const cause = await Cause.findById(req.params.id);
+router.put('/approve/:id', auth, isModerator, async (req, res) => {
+    try {
+        // console.log(req.body);
+        // get the cause by id supplied
+        const cause = await Cause.findById(req.params.id);
 
-//         if(cause == 0) return res.status(404).json({
-//             status: 'Not found',
-//             message: 'No cause with the given ID was not found.',
-//         });
+        if(cause == 0) return res.status(404).json({
+            status: 'Not found',
+            message: 'No cause with the given ID was not found.',
+            data:[]
+        });
 
-//         //update cause data
-//         cause.isApproved = req.body.isApproved;
-//         cause.approved_or_disapproved_by = req.user._id;
-//         cause.approved_or_disapproved_at = Date.now();
-//         cause.reason_for_disapproval = req.body.reason_for_disapproval;
-//         cause.updated_at = Date.now();
-//         await cause.save();
+        //update cause data
+        cause.isApproved = req.body.isApproved;
+        cause.approved_or_disapproved_by = req.user._id;
+        cause.approved_or_disapproved_at = Date.now();
+        cause.reason_for_disapproval = req.body.reason_for_disapproval;
+        cause.updated_at = Date.now();
+        await cause.save();
 
-//         return res.status(200).json({
-//             status: 'success',
-//             message: 'The cause has been Approved/Disapproved!',
-//             data: _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
-//                 'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at'
-//             ]),
-//         });
-//     } catch (error) {
-//         console.log(error);
-//     }
-// });
+        return res.status(200).json({
+            status: 'success',
+            message: 'The cause has been Approved/Disapproved!',
+            data: _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
+                'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
+                'amount_donated', 'isApproved', 'reason_for_disapproval'
+            ]),
+        });
+    } catch (error) {
+        console.log(error);
+    }
+});
 
 /*
 =================================================================================
@@ -144,6 +147,7 @@ router.post('/create', auth, causeMediaUpload, async (req, res) => {
         if(error) return res.status(400).json({
             status: 'Bad request',
            message: error.details[0].message,
+           data:[]
         });
         
         /*save data in the user table
@@ -156,16 +160,20 @@ router.post('/create', auth, causeMediaUpload, async (req, res) => {
             'share_on_social_media', 'cause_photos', 'cause_video', 'amount_required', 'category', 'created_by'
         ]));
 
-        //Get cause_photo paths and store in an array
-        const photos = req.files.cause_photos;
-        const causePhotos = [];
+        //check if request has video
+        const checkForCausePhoto = req.files.cause_photos == null;
+        console.log(checkForCausePhoto);
+        if(!checkForCausePhoto){
+            //Get cause_photo paths and store in an array
+            const photos = req.files.cause_photos;
+            const causePhotos = [];
 
-        photos.forEach(photo => {
-            causePhotos.push(photo.path);
-        });
+            photos.forEach(photo => {
+                causePhotos.push(photo.path);
+            });
 
-        cause.cause_photos = causePhotos;
-
+            cause.cause_photos = causePhotos;
+        }
         //check if request has video
         const checkForCauseVideo = req.files.cause_video == null;
         if(!checkForCauseVideo){
@@ -174,7 +182,8 @@ router.post('/create', auth, causeMediaUpload, async (req, res) => {
             }else{
                 return res.status(400).json({
                     status: 'Bad request',
-                    message: 'Cause_video must be a Video'
+                    message: 'Cause_video must be a Video',
+                    data:[]
                 });
             }
             
@@ -188,7 +197,8 @@ router.post('/create', auth, causeMediaUpload, async (req, res) => {
             status: 'success',
             message: 'Your Cause has been successfully created!',
             data: _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
-                'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at'
+            'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
+            'amount_donated'
             ]),
         });
     
@@ -218,12 +228,14 @@ router.get('/my_causes', auth, async (req, res) => {
             cause_video: 1,
             amount_required: 1,
             category: 1,
-            created_at: 1
+            created_at: 1,
+            share_on_social_media: 1
         });
 
         if(cause == 0) return res.status(404).json({
             status: 'Not found',
             message: 'No cause found.',
+            data:[]
         });
 
         return res.status(200).json({
@@ -253,12 +265,14 @@ router.put('/edit/:id', auth, causeMediaUpload, async (req, res) => {
         if(cause == 0) return res.status(404).json({
             status: 'Not found',
             message: 'No cause with the given ID was not found.',
+            data:[]
         });
 
         //check if user_id === cause creator
         if(cause.created_by !== req.user._id) return res.status(403).json({
             status: 'Access denied',
-            message: "Sorry, you don't have permission to edit this resource",
+            message: "Sorry, you don't have permission to edit this cause",
+            data:[]
         });
 
         //update cause data
@@ -280,7 +294,8 @@ router.put('/edit/:id', auth, causeMediaUpload, async (req, res) => {
             }else{
                 return res.status(400).json({
                     status: 'Bad request',
-                    message: 'Cause_video must be a Video'
+                    message: 'Cause_video must be a Video',
+                    data:[]
                 });
             }
             
@@ -307,7 +322,8 @@ router.put('/edit/:id', auth, causeMediaUpload, async (req, res) => {
             status: 'success',
             message: 'The cause has been updated!',
             data: _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
-                'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at'
+            'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
+            'amount_donated'
             ]),
         });
     } catch (error) {
@@ -329,6 +345,7 @@ router.put('/vote/:id', auth, async (req, res) => {
         if(cause == 0) return res.status(404).json({
             status: 'Not found',
             message: 'No cause with the given ID was not found.',
+            data:[]
         });
 
         //check if user has already voted
@@ -337,6 +354,7 @@ router.put('/vote/:id', auth, async (req, res) => {
         if(voted !== 0) return res.status(400).json({
             status: 'Bad request',
             message: "Sorry, you have already voted for this cause.",
+            data:[]
         });
 
         //update cause data
@@ -367,7 +385,61 @@ router.put('/vote/:id', auth, async (req, res) => {
             status: 'success',
             message: 'Your vote has been recorded!',
             data: _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
-                'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at'
+            'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
+            'amount_donated'
+            ]),
+        });
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+
+/*
+=================================================================================
+                        Donate to a cause
+                        Problem: not summing the amount_donated
+=================================================================================
+*/
+
+router.put('/donate/:id',auth, async (req, res) => {
+    try {
+        
+        // get the cause by id supplied
+        const cause = await Cause.findById(req.params.id);
+
+        if(cause == 0) return res.status(404).json({
+            status: 'Not found',
+            message: 'No cause with the given ID was not found.',
+            data:[]
+        });
+
+        // console.log(req.body);
+        //update cause data
+        cause.amount_donated = cause.amount_donated + req.body.amount_donated;      
+        cause.updated_at = Date.now();
+        await cause.save();
+
+        //create new role on the voter's table
+        const donor = new Donation();
+           
+            //check if donor is registered
+            const donorNotRegistered = req.user._id == null;
+            if(!donorNotRegistered){
+                donor.donor_id = req.user._id;
+            }
+            donor.cause_id = req.params.id;
+            donor.donated_at = Date.now();
+            donor.updated_at = Date.now();
+
+        await donor.save();
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Thank you for your donation!',
+            data: _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
+            'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
+            'amount_donated'
             ]),
         });
     } catch (error) {
@@ -389,12 +461,14 @@ router.get('/:id', async (req, res) => {
         if(cause == 0) return res.status(404).json({
             status: 'Not found',
             message: 'No cause with the given ID was not found.',
+            data:[]
         });
 
         return res.status(200).send({
             status: 'success',
             data:   _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
-                'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at'
+                'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
+                'amount_donated'
             ]),
         });
 
@@ -414,6 +488,7 @@ router.get('/', async (req, res) => {
         // get all causes
         const cause = await Cause.find({deleted_at: null, isApproved: 1}).sort({created_at: 1})
         .select({
+            _id: 1,
             cause_title: 1,
             brief_description: 1, 
             charity_information: 1,
@@ -422,12 +497,16 @@ router.get('/', async (req, res) => {
             cause_video: 1,
             amount_required: 1,
             category: 1,
-            created_at: 1
+            created_at: 1,
+            share_on_social_media: 1,
+            number_of_votes: 1, 
+            amount_donated: 1
         });
 
         if(cause == 0) return res.status(404).json({
             status: 'Not found',
             message: 'No cause found.',
+            data:[]
         });
 
         return res.status(200).json({
@@ -455,12 +534,14 @@ router.delete('/delete/:id', auth, async (req, res) => {
         if(cause == 0) return res.status(404).json({
             status: 'Not found',
             message: 'No cause with the given ID was found.',
+            data:[]
         });
 
         //check if user_id === cause creator
         if(cause.created_by !== req.user._id) return res.status(403).json({
             status: 'Access denied.',
             message: "Sorry you don't have permission to delete this file",
+            data:[]
         });
 
         //update cause data
@@ -472,6 +553,7 @@ router.delete('/delete/:id', auth, async (req, res) => {
         return res.status(200).json({
             status: 'success',
             message: 'The Cause has been successfully deleted!',
+            data:[]
         });
 
     }catch(e){
@@ -498,12 +580,16 @@ router.get('/category/health', async (req, res) => {
             cause_video: 1,
             amount_required: 1,
             category: 1,
-            created_at: 1
+            created_at: 1,
+            share_on_social_media: 1,
+            number_of_votes: 1, 
+            amount_donated: 1
         });
 
         if(cause == 0) return res.status(404).json({
             status: 'Not found',
             message: 'No cause found in this category.',
+            data:[]
         });
 
         return res.status(200).json({
@@ -529,12 +615,16 @@ router.get('/category/human_right', async (req, res) => {
             cause_video: 1,
             amount_required: 1,
             category: 1,
-            created_at: 1
+            created_at: 1,
+            share_on_social_media: 1,
+            number_of_votes: 1, 
+            amount_donated: 1
         });
         // if(!cause) return res.status(404).send('No cause found.');
         if(cause == 0) return res.status(404).json({
             status: 'Not found',
             message: 'No cause found in this category.',
+            data:[]
         });
 
         return res.status(200).json({
@@ -560,12 +650,16 @@ router.get('/category/food', async (req, res) => {
             cause_video: 1,
             amount_required: 1,
             category: 1,
-            created_at: 1
+            created_at: 1,
+            share_on_social_media: 1,
+            number_of_votes: 1, 
+            amount_donated: 1
         });
         // if(!cause) return res.status(404).send('No cause found.');
         if(cause == 0) return res.status(404).json({
             status: 'Not found',
             message: 'No cause found in this category.',
+            data:[]
         });
 
         return res.status(200).json({
@@ -591,12 +685,16 @@ router.get('/category/education', async (req, res) => {
             cause_video: 1,
             amount_required: 1,
             category: 1,
-            created_at: 1
+            created_at: 1,
+            share_on_social_media: 1,
+            number_of_votes: 1, 
+            amount_donated: 1
         });
 
         if(cause == 0) return res.status(404).json({
             status: 'Not found',
             message: 'No cause found in this category.',
+            data:[]
         });
 
         return res.status(200).json({
@@ -608,5 +706,6 @@ router.get('/category/education', async (req, res) => {
         console.log(e);
     }
 });
+
 
 module.exports = router;

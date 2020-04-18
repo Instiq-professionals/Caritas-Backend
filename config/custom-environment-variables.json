@@ -1,3 +1,4 @@
 {
-    "jwtPrivateKey": "caritas_jwtPrivateKey"
+    "jwtPrivateKey": "caritas_jwtPrivateKey",
+    "emailPassword": "caritas_emailPassword"
 }
