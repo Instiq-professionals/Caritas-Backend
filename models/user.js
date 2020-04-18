@@ -46,6 +46,11 @@ const userSchema = new mongoose.Schema ({
         required: true
     },
 
+    account_name:{
+        type: String,
+        required: true
+    },
+
     account_type:{
         type: String,
         required: true
@@ -121,6 +126,7 @@ function validateUser(user){
         bank_name: Joi.string().required(),
         account_number: Joi.number().required(),
         account_type: Joi.string().required(),
+        account_name: Joi.string().required(),
     };
 
     return Joi.validate(user, schema);

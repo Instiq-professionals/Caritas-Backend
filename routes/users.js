@@ -36,7 +36,7 @@ router.post('/register', async (req, res) => {
 
     //save data in the user table
     user = new User(_.pick(req.body, ['first_name', 'last_name', 'email', 'password', 'role', 'address', 'phone_number',
-        'bank_name', 'account_number', 'account_type']));
+        'bank_name', 'account_number', 'account_type', 'account_name']));
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(user.password, salt);
 
@@ -53,7 +53,7 @@ router.post('/register', async (req, res) => {
         status: 'success',
         message: 'You have been registered!',
        data: _.pick(user, ['_id', 'first_name', 'last_name', 'email', 'role', 'address', 'phone_number',
-       'bank_name', 'account_number', 'account_type'])
+       'bank_name', 'account_number', 'account_type', 'account_name'])
     });
 });
 
