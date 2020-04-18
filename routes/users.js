@@ -102,7 +102,8 @@ router.post('/login', async (req, res) => {
         res.header('x-auth-token', token).status(200).json({
             status: 'success',
             message: 'You have logged in successfully!',
-           data: _.pick(user, ['_id', 'first_name', 'last_name', 'email', 'role'])
+           data: _.pick(user, ['_id',  'first_name', 'last_name', 'email', 'role', 'address', 'phone_number',
+           'bank_name', 'account_number', 'account_type', 'account_name'])
         });
     }catch(e){
         console.log(e);

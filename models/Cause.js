@@ -178,6 +178,8 @@ function validateCause(cause){
         resolved_at: Joi.string(),
         deleted_at: Joi.string(),
         deleted_by: Joi.string(),
+        cause_video: Joi.string(),
+        cause_photos: Joi.string(),
     };
 
     return Joi.validate(cause, schema);
