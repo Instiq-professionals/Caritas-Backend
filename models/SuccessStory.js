@@ -42,6 +42,7 @@ const SuccessStory = mongoose.model('SuccessStory', successStorySchema);
 function validateStory(story){
     const schema = {
         testimonial: Joi.string().required(),
+        cause_id: Joi.string().required(),
     };
 
     return Joi.validate(story, schema);

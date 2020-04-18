@@ -162,7 +162,6 @@ router.post('/create', auth, causeMediaUpload, async (req, res) => {
 
         //check if request has video
         const checkForCausePhoto = req.files.cause_photos == null;
-        console.log(checkForCausePhoto);
         if(!checkForCausePhoto){
             //Get cause_photo paths and store in an array
             const photos = req.files.cause_photos;

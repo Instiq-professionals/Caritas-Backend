@@ -14,23 +14,18 @@ const multer = require('multer');
 =================================================================================
 */
 
-router.get('/approve_causes',[auth, isModerator], async (req, res) => {
+router.get('/', async (req, res) => {
     try{
-        // get all unapproved causes
-        const cause = await Cause.find({deleted_at: null, approved_at: null}).sort({created_at: 1})
+        // get all success stories
+        const stories = await SuccessStory.find({deleted_at: null}).sort({created_at: 1})
         .select({
-            cause_title: 1,
-            brief_description: 1, 
-            charity_information: 1,
-            additional_information: 1,
-            cause_photos: 1, 
-            cause_video: 1,
-            amount_required: 1,
-            category: 1,
-            created_at: 1
-        });
+            cause_id: 1,
+            testimonial: 1, 
+            created_by: 1,
+            created_at: 1,
+        });        
 
-        if(cause == 0) return res.status(404).json({
+        if(stories == null) return res.status(404).json({
             status: 'Not found',
             message: 'No cause found.',
             data:[]
@@ -38,7 +33,7 @@ router.get('/approve_causes',[auth, isModerator], async (req, res) => {
 
         return res.status(200).json({
             status: 'success',
-            data:  cause,
+            data:  stories,
         });
 
     }catch(e){
@@ -56,11 +51,11 @@ router.get('/approve_causes',[auth, isModerator], async (req, res) => {
 */
 
 // [auth, isAdmin]
-router.post('/create/:id', auth, async (req, res) => { 
+router.post('/create', auth, async (req, res) => { 
 
     try{
         // get the cause by id supplied
-        const cause = await Cause.findById(req.params.id);
+        const cause = await Cause.findById(req.body.cause_id);
 
         if(cause == null) return res.status(404).json({
             status: 'Not found',
@@ -90,10 +85,10 @@ router.post('/create/:id', auth, async (req, res) => {
         story = new SuccessStory(_.pick(req.body, [
             'cause_id', 'testimonial', 'created_at', 'created_by'
         ]));
-        cause.created_by = req.user._id;
+        story.created_by = req.user._id;
         
 
-        await cause.save();
+        await story.save();
 
         return res.status(200).json({
             status: 'success',
