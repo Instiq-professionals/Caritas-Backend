@@ -51,7 +51,7 @@ router.post('/register', async (req, res) => {
     const email =  req.body.email;
     subscribeForNewsLetter(email);
 
-    let link = 'https://caritas.instiq.com/api/users/verify_email/' + token;
+    let link = 'https://'+ req.headers.host +'/users/verify_email/' + token;
    //  console.log(link);
    
    //send mail
@@ -185,7 +185,7 @@ router.post('/forgot_password', async (req, res) => {
 
         //generate a token
         const token = user.generateAuthToken();
-         let link = 'https://caritas.instiq.com/api/users/reset_password/' + token;
+         let link = 'https://'+ req.headers.host +'/users/reset_password/' + token;
         //  console.log(link);
         
         //send mail
@@ -308,7 +308,7 @@ router.post('/generate_verification_token',auth, async (req, res) => {
 
     await user.save();
 
-    let link = 'https://caritas.instiq.com/api/users/verify_email/' + token;
+    let link = 'https://'+ req.headers.host +'/users/verify_email/' + token;
    //  console.log(link);
    
    //send mail
@@ -387,6 +387,5 @@ router.put('/confirm_email/:token', async (req, res) => {
        'bank_name', 'account_number', 'account_type', 'account_name', 'isEmailVerified'])
     });
 });
-
 
 module.exports = router;
