@@ -265,7 +265,7 @@ router.put('/update_password/:token', async (req, res) => {
 
     //update user password
     const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(user.password, salt);
+    user.password = await bcrypt.hash(req.body.password, salt);
     // user.password_reset_token = null;
     // user.password_reset_token_expires_on = null;
 
