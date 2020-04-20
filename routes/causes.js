@@ -91,7 +91,7 @@ router.put('/approve/:id', auth, isModerator, async (req, res) => {
 
 /*
 =================================================================================
-                        Approve causes  
+                        Disapprove causes  
 =================================================================================
 */
 
@@ -499,12 +499,17 @@ router.get('/:id', async (req, res) => {
             data:[]
         });
 
+        let causeCreatorDetails = await User.findById(cause.created_by);
+        causeDetails = _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
+        'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
+        'amount_donated','isApproved', 'isResolved']);
+
+        causeCreatorDetails =  _.pick(causeCreatorDetails, '_id', 'first_name', 'last_name', 'email', 'address', 'phone_number',
+        'bank_name', 'account_number', 'account_type', 'account_name' );
+
         return res.status(200).send({
             status: 'success',
-            data:   _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
-                'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
-                'amount_donated'
-            ]),
+            data: [causeDetails, causeCreatorDetails]
         });
 
     }catch(e){
