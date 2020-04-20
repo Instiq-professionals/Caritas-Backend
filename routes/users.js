@@ -144,11 +144,17 @@ router.post('/login', async (req, res) => {
 
         //generate a token
         const token = user.generateAuthToken();
-        res.header('x-auth-token', token).status(200).json({
+        if (user.isEmailVerified == 1) return res.header('x-auth-token', token).status(200).json({
             status: 'success',
             message: 'You have logged in successfully!',
            data: _.pick(user, ['_id',  'first_name', 'last_name', 'email', 'role', 'address', 'phone_number',
            'bank_name', 'account_number', 'account_type', 'account_name', 'isEmailVerified'])
+        });
+
+        return res.header('x-auth-token', token).status(200).json({
+            status: 'success',
+            message: 'Please verify your email address',
+           data: []
         });
     }catch(e){
         console.log(e);
@@ -266,8 +272,8 @@ router.put('/update_password/:token', async (req, res) => {
     //update user password
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(req.body.password, salt);
-    // user.password_reset_token = null;
-    // user.password_reset_token_expires_on = null;
+    user.password_reset_token = null;
+    user.password_reset_token_expires_on = null;
 
     await user.save();
 
