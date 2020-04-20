@@ -71,11 +71,47 @@ router.put('/approve/:id', auth, isModerator, async (req, res) => {
         });
 
         //update cause data
-        cause.isApproved = req.body.isApproved;
+        cause.isApproved = 1;
+        cause.approved_or_disapproved_by = req.user._id;
+        cause.approved_or_disapproved_at = Date.now();
+        await cause.save();
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'The cause has been Approved/Disapproved!',
+            data: _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
+                'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
+                'amount_donated', 'isApproved', 'reason_for_disapproval'
+            ]),
+        });
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+/*
+=================================================================================
+                        Approve causes  
+=================================================================================
+*/
+
+router.put('/disapprove/:id', auth, isModerator, async (req, res) => {
+    try {
+        // console.log(req.body);
+        // get the cause by id supplied
+        const cause = await Cause.findById(req.params.id);
+
+        if(cause == 0) return res.status(404).json({
+            status: 'Not found',
+            message: 'No cause with the given ID was not found.',
+            data:[]
+        });
+
+        //update cause data
+        cause.isApproved = 0;
         cause.approved_or_disapproved_by = req.user._id;
         cause.approved_or_disapproved_at = Date.now();
         cause.reason_for_disapproval = req.body.reason_for_disapproval;
-        cause.updated_at = Date.now();
         await cause.save();
 
         return res.status(200).json({

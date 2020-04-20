@@ -24,7 +24,10 @@ mongoose.connect('mongodb://localhost/caritas')
     .catch(err => console.error('Could not connect to MongoDB...', err));
 
 //routes
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+    exposedHeaders: ['x-auth-token'],
+}));
 app.options('*', cors());
 app.use(express.json());
 app.use(bodyParser.urlencoded({extended: true}));

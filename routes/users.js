@@ -49,7 +49,7 @@ router.post('/register', async (req, res) => {
     //generate a token
     const token = user.generateAuthToken();
 
-    res.header('x-auth-token', token).status(200).json({
+    res.status(200).json({
         status: 'success',
         message: 'You have been registered!',
        data: _.pick(user, ['_id', 'first_name', 'last_name', 'email', 'role', 'address', 'phone_number',
