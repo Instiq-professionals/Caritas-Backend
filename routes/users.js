@@ -301,6 +301,12 @@ router.post('/generate_verification_token',auth, async (req, res) => {
         data:[]
     });
 
+    if(user.isEmailVerified == 1) return res.status(400).json({
+        status: 'Bad request',
+        message: 'You have verified your email address',
+        data:[]
+    });
+
     //generate a token
     const token = jwt.sign({email: user.email}, config.get('jwtPrivateKey'));
     user.verify_email_token = token;
