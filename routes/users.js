@@ -130,6 +130,7 @@ function validateLogin(req){
 //=================================================================================
 router.post('/forgot_password', async (req, res) => {
     try{
+        
         let user = await User.findOne({ email: req.body.email });
         if (!user) return res.status(400).json({
             status: 'Bad request',
@@ -139,68 +140,47 @@ router.post('/forgot_password', async (req, res) => {
 
         //generate a token
         const token = user.generateAuthToken();
+         let link = 'http://'+'localhost:3000/api/users'+'/reset_password/' + token;
+        //  console.log(link);
         
         //send mail
-
-        // async..await is not allowed in global scope, must use a wrapper
-        // async function main() {
-        const main = async (token, user) =>{
-            // Generate test SMTP service account from ethereal.email
-            // Only needed if you don't have a real mail account for testing
-            let testAccount = await nodemailer.createTestAccount();
-
+        const mail = async (token, user) =>{
             // create reusable transporter object using the default SMTP transport
             let transporter = nodemailer.createTransport({
-                host: "smtp.ethereal.email",
+                host: "mail.instiq.com",
                 port: 587,
                 secure: false, // true for 465, false for other ports
                 auth: {
-                user: testAccount.user, // generated ethereal user
-                pass: testAccount.pass // generated ethereal password
+                user: "support.caritas@instiq.com",
+                pass: config.get('emailPassword')
+                },
+                tls:{
+                    rejectUnauthorized:false
                 }
             });
 
             // send mail with defined transport object
             let info = await transporter.sendMail({
-                from: '"Fred Foo 👻" <foo@example.com>', // sender address
-                to: "bar@example.com, baz@example.com", // list of receivers
-                subject: "Hello ✔", // Subject line
-                text: "Blah blah", // plain text body
-                html: "<b>Blah blah</b>" // html body
+                from: '"Caritas" <support.caritas@instiq.com>', // sender address
+                to: req.body.email, // list of receivers
+                subject: "Password Reset", // Subject line
+                text: 'You are receiving this email because you (or someone else) have requested to change your password. If it is you, please click on the link below to reset your password.' + 
+                        link + '\n\n' + 'Please ignore this email if you did not request for a password reset.',
+        
+                html: ` 
+                        <p> You are receiving this email because you (or someone else) have requested to change your password</p>
+                        <p> If it is you, please click on the link below to reset your password. Please ignore this email if you did not request for a password reset.</p> 
+                        <a href = '${link}' style=""background-color: #FC636B> ${link}</a>
+                     `
+
             });
 
             console.log("Message sent: %s", info.messageId);
-            // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
-
-            // Preview only available when sending through an Ethereal account
-            console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-            // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
         };
 
-        main().catch(console.error);
+        mail().catch(console.error);
 
-        // const sendPasswordResetEmail = async (token, user) =>{
-        //     let smtpTransport = nodemailer.createTransport({
-        //         service: 'Gmail',
-        //         auth:{
-        //             user: 'augustineumeagudosi@gmail.com',
-        //             password: config.get('emailPassword')
-        //         }
-        //     });
-
-        //     let mailOptions = {
-        //         to: user.email,
-        //         from: 'info@instiqcaritas.com',
-        //         text: 'You are receiving this email because you (or someone else) have requested to change your password' +
-        //             'If it is you, please click on the link below to reset your password.' +
-        //             'http://'+ req.header.host + '/reset_password/' + token + '\n\n' +
-        //             'Please ignore this email if you did not request for a password reset.',
-        //     };
-        //     smtpTransport.sendMail(mailOptions);
-        // };
-
-        // await sendPasswordResetEmail(token, user);
-
+        
         //save token to db
         user.password_reset_token = token;
         user.password_reset_token_expires_on = Date.now() + 3600000;  //expires in 1 hour
