@@ -3,7 +3,7 @@ const config = require('config');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const _ = require('lodash');
-const {User, validate} = require('../models/user');
+const {User, validate, validatePassword} = require('../models/user');
 const NewsLetterModel = require('../models/NewsletterSubscription');
 const express = require('express');
 const router = express.Router();
@@ -199,10 +199,42 @@ router.post('/forgot_password', async (req, res) => {
 });
 
 //                        Reset password endpoint 
-// (protected by middleware to check for token validity or expired token)
 //=================================================================================
+router.put('/update_password/:token', async (req, res) => {
+    //validate request body
+    const { error } = validatePassword(req.body);
+    if (error) return res.status(400).json({
+        status: 'Bad request',
+        message: error.details[0].message,
+        data:[]
+    });
 
+    //check if token exits on the database or if token has expired
+    let user = await User.findOne({ password_reset_token: req.params.token, password_reset_token_expires_on: {$gt: Date.now()} });
+    if(!user) return res.status(400).json({
+        status: 'Bad request',
+        message: 'Invalid or expired token',
+        data:[]
+    });
 
+    //update user password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
+    // user.password_reset_token = null;
+    // user.password_reset_token_expires_on = null;
+
+    await user.save();
+
+    //generate a token
+    const token = user.generateAuthToken();
+
+    res.header('x-auth-token', token).status(200).json({
+        status: 'success',
+        message: 'Your password hass been changed successfully!',
+       data: _.pick(user, ['_id', 'first_name', 'last_name', 'email', 'role', 'address', 'phone_number',
+       'bank_name', 'account_number', 'account_type', 'account_name'])
+    });
+});
 
 
 module.exports = router;
