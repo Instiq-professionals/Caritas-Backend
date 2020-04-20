@@ -103,6 +103,13 @@ const userSchema = new mongoose.Schema ({
     },
     password_reset_token_expires_on:{
         type: Date
+    },
+
+    verify_email_token:{
+        type: String
+    },
+    verify_email_token_expires_on:{
+        type: Date
     }
 });
 
