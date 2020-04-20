@@ -31,7 +31,11 @@ router.get('/approve_causes',[auth, isModerator], async (req, res) => {
             cause_video: 1,
             amount_required: 1,
             category: 1,
-            created_at: 1
+            created_at: 1,
+            amount_donated: 1,
+            isApproved: 1,
+            isResolved: 1,
+            created_by:1
         });
 
         if(cause == 0) return res.status(404).json({
