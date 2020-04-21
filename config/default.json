@@ -1,4 +1,5 @@
 {
     "jwtPrivateKey": "secret(toBeChangedLater)",
+    "email": "support.caritas@instiq.com",
     "emailPassword": "Instiq2020"
 }

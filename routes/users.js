@@ -9,6 +9,7 @@ const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
 const nodemailer = require('nodemailer');
+const mailer = require('../helpers/sendMail');
 
 /*
 =================================================================================
@@ -51,46 +52,24 @@ router.post('/register', async (req, res) => {
     const email =  req.body.email;
     subscribeForNewsLetter(email);
 
-    let link = 'https://'+ req.headers.host +'/users/verify_email/' + token;
-   //  console.log(link);
-   
-   //send mail
-   const mail = async () =>{
-       // create reusable transporter object using the default SMTP transport
-       let transporter = nodemailer.createTransport({
-           host: "mail.instiq.com",
-           port: 587,
-           secure: false, // true for 465, false for other ports
-           auth: {
-           user: "support.caritas@instiq.com",
-           pass: config.get('emailPassword')
-           },
-           //use the following lines if you are testing the endpoint offline
-           tls:{
-               rejectUnauthorized:false
-           }
-       });
-
-       // send mail with defined transport object
-       let info = await transporter.sendMail({
-           from: '"Caritas" <support.caritas@instiq.com>', // sender address
-           to: req.body.email, // list of receivers
-           subject: "Email Verification", // Subject line
-           text: 'You are receiving this email because you (or someone else) recently created an account on https://caritas.instiq.com with this email. If it is you, please click on the link below to confirm your email address.' + 
-                   link + '\n\n' + 'Please ignore this email if you did not create an account on https://caritas.instiq.com.',
-   
-           html: ` 
-                   <p> You are receiving this email because you (or someone else) recently created an account on https://caritas.instiq.com with this email</p>
-                   <p> If it is you, please click on the link below to confirm your email address. Please ignore this email if you did not create an account on https://caritas.instiq.com.</p> 
-                   <a href = '${link}'> ${link}</a>
-                `
-
-       });
-
-       console.log("Message sent: %s", info.messageId);
-   };
-
-   mail().catch(console.error);
+    // let link = 'http://'+ req.headers.host +'/users/verify_email/' + token;
+    const link = 'http://'+ req.headers.host +'/users/verify_email/' + token;
+    const subject = "Email Verification";
+    const emailText = 'You are receiving this email because you (or someone else) recently created an account on https://caritas.instiq.com with this email. If it is you, please click on the link below to confirm your email address.' + 
+                        link + '\n\n' + 'Please ignore this email if you did not create an account on https://caritas.instiq.com.';
+    const htmlText = ` 
+                        <p> You are receiving this email because you (or someone else) recently created an account on https://caritas.instiq.com with this email</p>
+                        <p> If it is you, please click on the link below to confirm your email address. Please ignore this email if you did not create an account on https://caritas.instiq.com.</p> 
+                        <a href = '${link}'> ${link}</a>
+                    `;
+    //send mail
+    mailer({
+        from: '"Caritas" <support.caritas@instiq.com>',
+        to: user.email,
+        subject: subject,
+        text: emailText,
+        html: htmlText
+    });
 
     res.status(200).json({
         status: 'success',
@@ -144,14 +123,14 @@ router.post('/login', async (req, res) => {
 
         //generate a token
         const token = user.generateAuthToken();
-        if (user.isEmailVerified == 1) return res.header('x-auth-token', token).status(200).json({
+        if (user.isEmailVerified == true) return res.header('x-auth-token', token).status(200).json({
             status: 'success',
             message: 'You have logged in successfully!',
            data: _.pick(user, ['_id',  'first_name', 'last_name', 'email', 'role', 'address', 'phone_number',
            'bank_name', 'account_number', 'account_type', 'account_name', 'isEmailVerified'])
         });
 
-        return res.status(400).json({
+        return res.status(206).json({
             status: 'Partial content',
             message: 'Please verify your email address',
            data: []
@@ -191,47 +170,26 @@ router.post('/forgot_password', async (req, res) => {
 
         //generate a token
         const token = user.generateAuthToken();
-         let link = 'https://'+ req.headers.host +'/users/reset_password/' + token;
-        //  console.log(link);
+        //  let link = 'http://'+ req.headers.host +'/users/reset_password/' + token;
         
         //send mail
-        const mail = async () =>{
-            // create reusable transporter object using the default SMTP transport
-            let transporter = nodemailer.createTransport({
-                host: "mail.instiq.com",
-                port: 587,
-                secure: false, // true for 465, false for other ports
-                auth: {
-                user: "support.caritas@instiq.com",
-                pass: config.get('emailPassword')
-                },
-                // use the following lines if you are testing the endpoint offline
-                tls:{
-                    rejectUnauthorized:false
-                }
-            });
-
-            // send mail with defined transport object
-            let info = await transporter.sendMail({
-                from: '"Caritas" <support.caritas@instiq.com>', // sender address
-                to: req.body.email, // list of receivers
-                subject: "Password Reset", // Subject line
-                text: 'You are receiving this email because you (or someone else) have requested to change your password. If it is you, please click on the link below to reset your password.' + 
-                        link + '\n\n' + 'Please ignore this email if you did not request for a password reset.',
-        
-                html: ` 
-                        <p> You are receiving this email because you (or someone else) have requested to change your password</p>
-                        <p> If it is you, please click on the link below to reset your password. Please ignore this email if you did not request for a password reset.</p> 
-                        <a href = '${link}'> ${link}</a>
-                     `
-
-            });
-
-            console.log("Message sent: %s", info.messageId);
-        };
-
-        mail().catch(console.error);
-
+        let link = 'http://'+ req.headers.host +'/users/reset_password/' + token;
+        const subject = "Password Reset";
+        const emailText = 'You are receiving this email because you (or someone else) have requested to change your password. If it is you, please click on the link below to reset your password.' + 
+                            link + '\n\n' + 'Please ignore this email if you did not request for a password reset.';
+        const htmlText = ` 
+                            <p> You are receiving this email because you (or someone else) have requested to change your password</p>
+                            <p> If it is you, please click on the link below to reset your password. Please ignore this email if you did not request for a password reset.</p> 
+                            <a href = '${link}'> ${link}</a>
+                        `;
+        //send mail
+        mailer({
+            from: '"Caritas" <support.caritas@instiq.com>',
+            to: req.body.email,
+            subject: subject,
+            text: emailText,
+            html: htmlText
+        });
         
         //save token to db
         user.password_reset_token = token;
@@ -320,46 +278,23 @@ router.post('/generate_verification_token',auth, async (req, res) => {
 
     await user.save();
 
-    let link = 'https://'+ req.headers.host +'/users/verify_email/' + token;
-   //  console.log(link);
-   
-   //send mail
-   const mail = async () =>{
-       // create reusable transporter object using the default SMTP transport
-       let transporter = nodemailer.createTransport({
-           host: "mail.instiq.com",
-           port: 587,
-           secure: false, // true for 465, false for other ports
-           auth: {
-           user: "support.caritas@instiq.com",
-           pass: config.get('emailPassword')
-           },
-           //use the following lines if you are testing the endpoint offline
-           tls:{
-               rejectUnauthorized:false
-           }
-       });
-
-       // send mail with defined transport object
-       let info = await transporter.sendMail({
-           from: '"Caritas" <support.caritas@instiq.com>', // sender address
-           to: user.email, // list of receivers
-           subject: "Email Verification", // Subject line
-           text: 'You are receiving this email because you (or someone else) recently created an account on https://caritas.instiq.com with this email. If it is you, please click on the link below to confirm your email address.' + 
-                   link + '\n\n' + 'Please ignore this email if you did not create an account on https://caritas.instiq.com.',
-   
-           html: ` 
-                   <p> You are receiving this email because you (or someone else) recently created an account on https://caritas.instiq.com with this email</p>
-                   <p> If it is you, please click on the link below to confirm your email address. Please ignore this email if you did not create an account on https://caritas.instiq.com.</p> 
-                   <a href = '${link}'> ${link}</a>
-                `
-
-       });
-
-       console.log("Message sent: %s", info.messageId);
-   };
-
-   mail().catch(console.error);
+    const link = 'http://'+ req.headers.host +'/users/verify_email/' + token;
+    const subject = "Email Verification";
+    const emailText = 'You are receiving this email because you (or someone else) recently created an account on https://caritas.instiq.com with this email. If it is you, please click on the link below to confirm your email address.' + 
+                        link + '\n\n' + 'Please ignore this email if you did not create an account on https://caritas.instiq.com.';
+    const htmlText = ` 
+                        <p> You are receiving this email because you (or someone else) recently created an account on https://caritas.instiq.com with this email</p>
+                        <p> If it is you, please click on the link below to confirm your email address. Please ignore this email if you did not create an account on https://caritas.instiq.com.</p> 
+                        <a href = '${link}'> ${link}</a>
+                    `;
+    //send mail
+    mailer({
+        from: '"Caritas" <support.caritas@instiq.com>',
+        to: user.email,
+        subject: subject,
+        text: emailText,
+        html: htmlText
+    });
 
     res.status(200).json({
         status: 'success',
