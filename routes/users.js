@@ -151,8 +151,8 @@ router.post('/login', async (req, res) => {
            'bank_name', 'account_number', 'account_type', 'account_name', 'isEmailVerified'])
         });
 
-        return res.header('x-auth-token', token).status(200).json({
-            status: 'success',
+        return res.status(400).json({
+            status: 'Partial content',
             message: 'Please verify your email address',
            data: []
         });
