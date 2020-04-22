@@ -10,6 +10,7 @@ const {CauseFollowers} = require('../models/CauseFollower');
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const mailer = require('../helpers/sendMail');
 
 
 /*
@@ -137,6 +138,20 @@ router.put('/disapprove/:id', auth, isModerator, async (req, res) => {
 =================================================================================
 */
 
+/*role.includes("Moderator")
+    This route is solely for experimentation (for dev use only)
+*/
+router.get('/test', async (req, res) => { 
+    // const moderators = await User.find({role: 'Moderator' }).sort({created_at: 1}); //find all users who are moderators and return their roles
+    const moderators = await User.find({role: { $all: ['Moderator'] }}).select({ email: 1 }); //find all users who are moderators and return their roles (used to find two roles simultaneously)
+    let email = [];
+    moderators.forEach(moderator => {
+        email.push(moderator.email);
+    });
+    return res.send(email);
+});
+
+
 //specify file name to store and storage location
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -231,6 +246,36 @@ router.post('/create', auth, causeMediaUpload, async (req, res) => {
         
 
         await cause.save();
+
+        /** Email all moderators that a new cause was created
+        ================================================= **/
+
+        //fetch all moderators and extract their email addresses
+        const moderators = await User.find({role: 'Moderator' }).select({ email: 1 });
+        
+        // declare email variables
+        let email = [];
+
+        //extract moderators email addresses
+        moderators.forEach(moderator => {
+            email.push(moderator.email);
+        });
+
+        //send mail
+        // let link = 'http://'+ req.headers.host +'/users/reset_password/' + token;
+        const subject = "A New Cause Was Created";
+        const emailText = 'A new Cause '+cause.cause_title+ ' was created. Please log onto your account to review.';
+        const htmlText = ` 
+                            <p> A new Cause ${cause.cause_title} was created. Please log onto your account to review.</p>
+                        `;
+        //send mail
+        mailer({
+            from: '"Caritas" <support.caritas@instiq.com>',
+            to: email,
+            subject: subject,
+            text: emailText,
+            html: htmlText
+        });
 
         return res.status(200).json({
             status: 'success',
