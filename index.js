@@ -18,10 +18,10 @@ if(!config.get('jwtPrivateKey')){
     process.exit(1);
 }
 
-//db connectionf
+//db connection
 mongoose.connect('mongodb://localhost/caritas')
     .then(() => console.log('Connected to MongoDB...'))
-    .catch(err => console.error('Could not connect to MongoDB...', err));
+    .catch(err => console.error('Could not connect to MongoDB.', err));
 
 //routes
 // app.use(cors());

@@ -55,11 +55,11 @@ router.post('/register', async (req, res) => {
     // let link = 'http://'+ req.headers.host +'/users/verify_email/' + token;
     const link = 'http://'+ req.headers.host +'/users/verify_email/' + token;
     const subject = "Email Verification";
-    const emailText = 'You are receiving this email because you (or someone else) recently created an account on https://caritas.instiq.com with this email. If it is you, please click on the link below to confirm your email address.' + 
-                        link + '\n\n' + 'Please ignore this email if you did not create an account on https://caritas.instiq.com.';
+    const emailText = 'You are receiving this email because you (or someone else) recently created an account on http://www.caritas.instiq.com with this email address. If it is you, kindly click on the link below to confirm your email address.' + 
+                        link + '\n\n' + 'Please ignore this email if you did not create this account.';
     const htmlText = ` 
-                        <p> You are receiving this email because you (or someone else) recently created an account on https://caritas.instiq.com with this email</p>
-                        <p> If it is you, please click on the link below to confirm your email address. Please ignore this email if you did not create an account on https://caritas.instiq.com.</p> 
+                        <p> You are receiving this email because you (or someone else) recently created an account on <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> with this email address</p>
+                        <p> If it is you, kindly click on the link below to confirm your email address. Please ignore this email if you did not create this account.</p> 
                         <a href = '${link}'> ${link}</a>
                     `;
     //send mail
@@ -175,11 +175,11 @@ router.post('/forgot_password', async (req, res) => {
         //send mail
         let link = 'http://'+ req.headers.host +'/users/reset_password/' + token;
         const subject = "Password Reset";
-        const emailText = 'You are receiving this email because you (or someone else) have requested to change your password. If it is you, please click on the link below to reset your password.' + 
+        const emailText = 'You are receiving this email because you (or someone else) have requested to change your password. If it is you, kindly click on the link below to reset your password.' + 
                             link + '\n\n' + 'Please ignore this email if you did not request for a password reset.';
         const htmlText = ` 
                             <p> You are receiving this email because you (or someone else) have requested to change your password</p>
-                            <p> If it is you, please click on the link below to reset your password. Please ignore this email if you did not request for a password reset.</p> 
+                            <p> If it is you, kindly click on the link below to reset your password. Please ignore this email if you did not request for a password reset.</p> 
                             <a href = '${link}'> ${link}</a>
                         `;
         //send mail
@@ -280,11 +280,11 @@ router.post('/generate_verification_token',auth, async (req, res) => {
 
     const link = 'http://'+ req.headers.host +'/users/verify_email/' + token;
     const subject = "Email Verification";
-    const emailText = 'You are receiving this email because you (or someone else) recently created an account on https://caritas.instiq.com with this email. If it is you, please click on the link below to confirm your email address.' + 
-                        link + '\n\n' + 'Please ignore this email if you did not create an account on https://caritas.instiq.com.';
+    const emailText = 'You are receiving this email because you (or someone else) recently created an account on http://www.caritas.instiq.com with this email address. If it is you, kindly click on the link below to confirm your email address.' + 
+                        link + '\n\n' + 'Please ignore this email if you did not create this account.';
     const htmlText = ` 
-                        <p> You are receiving this email because you (or someone else) recently created an account on https://caritas.instiq.com with this email</p>
-                        <p> If it is you, please click on the link below to confirm your email address. Please ignore this email if you did not create an account on https://caritas.instiq.com.</p> 
+                        <p> You are receiving this email because you (or someone else) recently created an account on <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> with this email address</p>
+                        <p> If it is you, kindly click on the link below to confirm your email address. Please ignore this email if you did not create this account.</p> 
                         <a href = '${link}'> ${link}</a>
                     `;
     //send mail

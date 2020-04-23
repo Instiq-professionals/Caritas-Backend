@@ -69,7 +69,7 @@ router.put('/approve/:id', auth, isModerator, async (req, res) => {
         // get the cause by id supplied
         const cause = await Cause.findById(req.params.id);
 
-        if(cause == 0) return res.status(404).json({
+        if(!cause) return res.status(404).json({
             status: 'Not found',
             message: 'No cause with the given ID was not found.',
             data:[]
@@ -80,6 +80,32 @@ router.put('/approve/:id', auth, isModerator, async (req, res) => {
         cause.approved_or_disapproved_by = req.user._id;
         cause.approved_or_disapproved_at = Date.now();
         await cause.save();
+
+        /** Email the user about the cause approval.
+        ================================================= **/
+
+        //fetch cause creator
+        const user = await User.findById(cause.created_by);
+        
+        // declare email variables
+        let email = user.email;
+        const subject = "Your Cause was Approved!";
+        const emailText = 'Dear '+user.first_name+ ' , Congratulations!. Your Cause' +cause.cause_title+ ' has been approved for donation. Kindly log onto your account to manage your Cause. We also encourage you to invite your friends to join the platform.';
+        const htmlText = ` 
+                            <p> Dear ${user.first_name},</p>
+                            <p> Congratulations!. Your Cause "${cause.cause_title}" has been approved for donation.</p>
+                            <p>Kindly log onto your account at <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> to manage your Cause.</p>
+                            <p>We also encourage you to invite your friends to join the platform.</p>
+                        `;
+        //send mail
+        mailer({
+            from: '"Caritas" <support.caritas@instiq.com>',
+            to: email,
+            subject: subject,
+            text: emailText,
+            html: htmlText
+        });
+
 
         return res.status(200).json({
             status: 'success',
@@ -106,7 +132,7 @@ router.put('/disapprove/:id', auth, isModerator, async (req, res) => {
         // get the cause by id supplied
         const cause = await Cause.findById(req.params.id);
 
-        if(cause == 0) return res.status(404).json({
+        if(!cause) return res.status(404).json({
             status: 'Not found',
             message: 'No cause with the given ID was not found.',
             data:[]
@@ -134,12 +160,13 @@ router.put('/disapprove/:id', auth, isModerator, async (req, res) => {
 
 /*
 =================================================================================
-                        Create Cause
+                       Test endpoint
 =================================================================================
 */
 
-/*role.includes("Moderator")
-    This route is solely for experimentation (for dev use only)
+/*
+    //role.includes("Moderator")
+    This endpoint is solely for experimentation (for dev use only)
 */
 router.get('/test', async (req, res) => { 
     // const moderators = await User.find({role: 'Moderator' }).sort({created_at: 1}); //find all users who are moderators and return their roles
@@ -151,6 +178,11 @@ router.get('/test', async (req, res) => {
     return res.send(email);
 });
 
+/*
+=================================================================================
+                        Create Cause
+=================================================================================
+*/
 
 //specify file name to store and storage location
 const storage = multer.diskStorage({
@@ -264,9 +296,9 @@ router.post('/create', auth, causeMediaUpload, async (req, res) => {
         //send mail
         // let link = 'http://'+ req.headers.host +'/users/reset_password/' + token;
         const subject = "A New Cause Was Created";
-        const emailText = 'A new Cause '+cause.cause_title+ ' was created. Please log onto your account to review.';
+        const emailText = 'A new Cause '+cause.cause_title+ ' was created. Please log onto your account at http://www.caritas.instiq.com to review.';
         const htmlText = ` 
-                            <p> A new Cause ${cause.cause_title} was created. Please log onto your account to review.</p>
+                            <p> A new Cause ${cause.cause_title} was created. Please log onto your account at <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> to review.</p>
                         `;
         //send mail
         mailer({

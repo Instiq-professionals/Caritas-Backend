@@ -24,13 +24,11 @@ const causeSchema = new mongoose.Schema ({
     },
 
     charity_information:{
-        type: String,
-        required: true,
+        type: String
     },
 
     additional_information:{
-        type: String,
-        required: true,
+        type: String
     },
 
     accept_comments_and_reviews:{
@@ -155,7 +153,7 @@ function validateCause(cause){
     const schema = {
         cause_title: Joi.string().required(),
         brief_description: Joi.string().required(),
-        charity_information: Joi.string().required(),
+        charity_information: Joi.string(),
         additional_information: Joi.string(),
         account_number: Joi.number(),
         accept_comments_and_reviews: Joi.boolean(),
