@@ -63,7 +63,7 @@ router.get('/approve_causes',[auth, isModerator], async (req, res) => {
 =================================================================================
 */
 
-router.put('/approve/:id', auth, isModerator, async (req, res) => {
+router.put('/approve/:id', [auth, isModerator], async (req, res) => {
     try {
         // console.log(req.body);
         // get the cause by id supplied
@@ -89,7 +89,7 @@ router.put('/approve/:id', auth, isModerator, async (req, res) => {
         
         // declare email variables
         let email = user.email;
-        const subject = "Your Cause was Approved!";
+        const subject = "Your Cause - "+cause.cause_title +" has been Approved!";
         const emailText = 'Dear '+user.first_name+ ' , Congratulations!. Your Cause' +cause.cause_title+ ' has been approved for donation. Kindly log onto your account to manage your Cause. We also encourage you to invite your friends to join the platform.';
         const htmlText = ` 
                             <p> Dear ${user.first_name},</p>
@@ -123,10 +123,11 @@ router.put('/approve/:id', auth, isModerator, async (req, res) => {
 /*
 =================================================================================
                         Disapprove causes  
+                        modify message on email body 
 =================================================================================
 */
 
-router.put('/disapprove/:id', auth, isModerator, async (req, res) => {
+router.put('/disapprove/:id', [auth, isModerator], async (req, res) => {
     try {
         // console.log(req.body);
         // get the cause by id supplied
@@ -144,6 +145,32 @@ router.put('/disapprove/:id', auth, isModerator, async (req, res) => {
         cause.approved_or_disapproved_at = Date.now();
         cause.reason_for_disapproval = req.body.reason_for_disapproval;
         await cause.save();
+
+        /** Email the user about the cause disapproval.
+        ================================================= **/
+
+        //fetch cause creator
+        const user = await User.findById(cause.created_by);
+        
+        // declare email variables
+        let email = user.email;
+        const subject = "About your cause - " +cause.cause_title;
+        const emailText = 'Dear '+user.first_name+ ',. Your Cause' +cause.cause_title+ ' has been approved for donation. Kindly log onto your account to manage your Cause. We also encourage you to invite your friends to join the platform.';
+        const htmlText = ` 
+                            <p> Dear ${user.first_name},</p>
+                            <p> Congratulations!. Your Cause "${cause.cause_title}" has been approved for donation.</p>
+                            <p>Kindly log onto your account at <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> to manage your Cause.</p>
+                            <p>We also encourage you to invite your friends to join the platform.</p>
+                        `;
+        //send mail
+        mailer({
+            from: '"Caritas" <support.caritas@instiq.com>',
+            to: email,
+            subject: subject,
+            text: emailText,
+            html: htmlText
+        });
+
 
         return res.status(200).json({
             status: 'success',

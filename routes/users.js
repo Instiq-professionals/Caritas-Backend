@@ -17,68 +17,79 @@ const mailer = require('../helpers/sendMail');
 =================================================================================
 */
 router.post('/register', async (req, res) => {
-    // validate request data
-    const { error } = validate(req.body);
-    // if (error) return res.status(400).send();
-    if(error) return res.status(400).json({
-        status: 'Bad request',
-        message: error.details[0].message,
-        data:[]
-    });
+    try {
+        // validate request data
+        const { error } = validate(req.body);
+        // if (error) return res.status(400).send();
+        if(error) return res.status(400).json({
+            status: 'Bad request',
+            message: error.details[0].message,
+            data:[]
+        });
 
-    //check if email already registered
-    let user = await User.findOne({ email: req.body.email });
-    // if (user) return res.status(400).send();
-    if(user) return res.status(400).json({
-        status: 'Bad request',
-        message: 'This Email already exists in our database',
-        data:[]
-    });
+        //check if email already registered
+        let user = await User.findOne({ email: req.body.email });
+        // if (user) return res.status(400).send();
+        if(user) return res.status(400).json({
+            status: 'Bad request',
+            message: 'This Email already exists in our database',
+            data:[]
+        });
 
-    //generate a token
-    const token = jwt.sign({email: req.body.email}, config.get('jwtPrivateKey'));
+        //generate a token
+        const token = jwt.sign({email: req.body.email}, config.get('jwtPrivateKey'));
 
-    //save data in the user table
-    user = new User(_.pick(req.body, ['first_name', 'last_name', 'email', 'password', 'role', 'address', 'phone_number',
-        'bank_name', 'account_number', 'account_type', 'account_name', 'verify_email_token', 'verify_email_token_expires_on']));
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(user.password, salt);
-    user.verify_email_token = token;
-    user.verify_email_token_expires_on = Date.now() + 3600000;  //expires in 1 hour
+        //save data in the user table
+        user = new User(_.pick(req.body, ['first_name', 'last_name', 'email', 'password', 'role', 'address', 'phone_number',
+            'bank_name', 'account_number', 'account_type', 'account_name', 'verify_email_token', 'verify_email_token_expires_on']));
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+        user.verify_email_token = token;
+        user.verify_email_token_expires_on = Date.now() + 3600000;  //expires in 1 hour
 
-    await user.save();
+        await user.save();
 
-    //save user email to newsletter document
-    const email =  req.body.email;
-    subscribeForNewsLetter(email);
+        //save user email to newsletter document
+        const email =  req.body.email;
+        subscribeForNewsLetter(email);
 
-    // let link = 'http://'+ req.headers.host +'/users/verify_email/' + token;
-    const link = 'http://'+ req.headers.host +'/users/verify_email/' + token;
-    const subject = "Email Verification";
-    const emailText = 'You are receiving this email because you (or someone else) recently created an account on http://www.caritas.instiq.com with this email address. If it is you, kindly click on the link below to confirm your email address.' + 
-                        link + '\n\n' + 'Please ignore this email if you did not create this account.';
-    const htmlText = ` 
-                        <p> You are receiving this email because you (or someone else) recently created an account on <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> with this email address</p>
-                        <p> If it is you, kindly click on the link below to confirm your email address. Please ignore this email if you did not create this account.</p> 
-                        <a href = '${link}'> ${link}</a>
-                    `;
-    //send mail
-    mailer({
-        from: '"Caritas" <support.caritas@instiq.com>',
-        to: user.email,
-        subject: subject,
-        text: emailText,
-        html: htmlText
-    });
+        // let link = 'http://'+ req.headers.host +'/users/verify_email/' + token;
+        const link = 'http://'+ req.headers.host +'/users/verify_email/' + token;
+        const subject = "Email Verification";
+        const emailText = 'You are receiving this email because you (or someone else) recently created an account on http://www.caritas.instiq.com with this email address. If it is you, kindly click on the link below to confirm your email address.' + 
+                            link + '\n\n' + 'Please ignore this email if you did not create this account.';
+        const htmlText = ` 
+                            <p> You are receiving this email because you (or someone else) recently created an account on <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> with this email address</p>
+                            <p> If it is you, kindly click on the link below to confirm your email address. Please ignore this email if you did not create this account.</p> 
+                            <a href = '${link}'> ${link}</a>
+                        `;
+        //send mail
+        mailer({
+            from: '"Caritas" <support.caritas@instiq.com>',
+            to: user.email,
+            subject: subject,
+            text: emailText,
+            html: htmlText
+        });
 
-    res.status(200).json({
-        status: 'success',
-        message: 'You have been registered!',
-       data: _.pick(user, ['_id', 'first_name', 'last_name', 'email', 'role', 'address', 'phone_number',
-       'bank_name', 'account_number', 'account_type', 'account_name', 'isEmailVerified'])
-    });
+        res.status(200).json({
+            status: 'success',
+            message: 'You have been registered!',
+        data: _.pick(user, ['_id', 'first_name', 'last_name', 'email', 'role', 'address', 'phone_number',
+        'bank_name', 'account_number', 'account_type', 'account_name', 'isEmailVerified'])
+        });
+
+    } 
+    catch (error) {
+        console.log(error);
+    }
 });
 
+/*
+=================================================================================
+                        Newsletter subscription
+=================================================================================
+*/
 
 // subscribe to newsleter after user registration
 async function subscribeForNewsLetter(email){
@@ -91,7 +102,24 @@ async function subscribeForNewsLetter(email){
     }
 }
 
-
+router.post('/newsletter_subscription', async (req, res) => {
+    try{
+        let emailExists = await NewsLetter.findOne({email: req.body.email});
+        if(!emailExists){
+            const subscribeUser = new NewsLetter({
+                email: req.body.email
+            });
+            await subscribeUser.save();
+        }
+        res.status(200).json({
+            status: 'success',
+            message: 'You have been subscribed to our weekly newsletter',
+            data: _.pick(emailExists, ['_id', 'email', 'isSubscribed'])
+        });
+    }catch(e){
+        console.log(e);
+    }
+});
 /*
 =================================================================================
                         User Login
