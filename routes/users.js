@@ -8,8 +8,9 @@ const {NewsLetter} = require('../models/NewsletterSubscription');
 const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
-const nodemailer = require('nodemailer');
 const mailer = require('../helpers/sendMail');
+const multer = require("multer");
+
 
 /*
 =================================================================================
@@ -53,7 +54,6 @@ router.post('/register', async (req, res) => {
         const email =  req.body.email;
         subscribeForNewsLetter(email);
 
-        // let link = 'http://'+ req.headers.host +'/users/verify_email/' + token;
         const link = 'http://'+ req.headers.host +'/users/verify_email/' + token;
         const subject = "Email Verification";
         const emailText = 'You are receiving this email because you (or someone else) recently created an account on http://www.caritas.instiq.com with this email address. If it is you, kindly click on the link below to confirm your email address.' + 
@@ -83,6 +83,174 @@ router.post('/register', async (req, res) => {
     catch (error) {
         console.log(error);
     }
+});
+
+/*
+=================================================================================
+                        Get User Information
+================================================================================= */
+
+router.get("/profile", auth, async (req, res) => {
+    try {
+      const user = await User.findById(req.user._id);
+    //   console.log("Profile user id", req.user._id);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "The user does not exist",
+        });
+      }
+  
+      return res.status(200).json({
+        success: true,
+        message: "User retrieved successfully",
+        data: _.pick(user, [
+          "_id",
+          "first_name",
+          "last_name",
+          "photo",
+          "email",
+          "role",
+          "address",
+          "phone_number",
+          "bank_name",
+          "account_number",
+          "account_type",
+          "account_name",
+        ]),
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  });
+  
+
+  /*
+=================================================================================
+                    Update profile
+=================================================================================
+*/
+
+//specify file name to store and storage location
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+//validate file mime type
+const fileFilter = (req, file, cb) => {
+  try {
+    //reject file
+    if (
+      file.mimetype === "image/bmp" ||
+      file.mimetype === "image/tiff" ||
+      file.mimetype === "image/png" ||
+      file.mimetype === "image/jpg" ||
+      file.mimetype === "image/jpeg" ||
+      file.mimetype === "image/svg"
+    ) {
+      cb(null, true);
+    } else {
+      cb("Sorry, images of type, png, jpg or jpeg allowed", false);
+    }
+  } catch (error) {
+    handleError(error, res);
+  }
+};
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 1024 * 1024 * 10,
+  },
+  fileFilter: fileFilter,
+});
+
+const photoUpload = upload.fields([{ name: "photo", maxCount: 1 }]);
+
+router.post("/profile/update", auth, photoUpload, async (req, res) => {
+//   console.log("Let me see the file path", req.files.photo[0].path);
+  try {
+    let user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User was not found",
+      });
+    }
+    let somethingChanged = false;
+    if (req.body.first_name && req.body.first_name != user.first_name) {
+      user.first_name = req.body.first_name;
+      somethingChanged = true;
+    }
+    if (req.body.last_name && req.body.last_name != user.last_name) {
+      user.last_name = req.body.last_name;
+      somethingChanged = true;
+    }
+    // if (req.body.email && req.body.email != user.email) {
+    //   user.email = req.body.email;
+    //   somethingChanged = true;
+    // }
+    if (
+      req.body.account_number &&
+      req.body.account_number != user.account_number
+    ) {
+      user.account_number = req.body.account_number;
+      somethingChanged = true;
+    }
+    if (req.body.account_name && req.body.account_name != user.account_name) {
+      user.account_name = req.body.account_name;
+      somethingChanged = true;
+    }
+    if (req.body.phone_number && req.body.phone_number != user.phone_number) {
+      user.phone_number = req.body.phone_number;
+      somethingChanged = true;
+    }
+    if (req.body.bank_name && req.body.bank_name != user.bank_name) {
+      user.bank_name = req.body.bank_name;
+      somethingChanged = true;
+    }
+    if (req.body.account_type && req.body.account_type != user.account_type) {
+      user.account_type = req.body.account_type;
+      somethingChanged = true;
+    }
+    if (req.body.address && req.body.address != user.address) {
+      user.address = req.body.address;
+      somethingChanged = true;
+    }
+
+    if (req.files.photo) {
+      user.photo = req.files.photo[0].path;
+      somethingChanged = true;
+    }
+
+    if (somethingChanged) {
+      user.updated_at = Date.now();
+
+      await user.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Profile updated successully",
+      });
+    } else {
+      return res.status(206).json({
+        success: false,
+        message: "Nothing to update",
+      });
+    }
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while processing your request," + e.message,
+    });
+  }
 });
 
 /*
@@ -155,7 +323,7 @@ router.post('/login', async (req, res) => {
             status: 'success',
             message: 'You have logged in successfully!',
            data: _.pick(user, ['_id',  'first_name', 'last_name', 'email', 'role', 'address', 'phone_number',
-           'bank_name', 'account_number', 'account_type', 'account_name', 'isEmailVerified'])
+           'bank_name', 'account_number', 'account_type', 'account_name', 'isEmailVerified', 'photo'])
         });
 
         return res.status(206).json({

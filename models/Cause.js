@@ -2,13 +2,6 @@ const Joi = require('joi');
 const mongoose = require('mongoose');
 
 const causeSchema = new mongoose.Schema ({
-    // _id: { 
-    //     type: mongoose.SchemaTypes.ObjectId,
-    //     required: true, 
-    //     index: true,
-    //     default: generateId(16)
-    // },
-
     cause_title:{
         type: String,
         required: true,

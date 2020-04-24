@@ -4,6 +4,11 @@ const Joi = require('joi');
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema ({
+    photo: {
+        type: String,
+        default: "",
+    },
+
     first_name:{
         type: String,
         required: true,

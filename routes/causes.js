@@ -109,7 +109,7 @@ router.put('/approve/:id', [auth, isModerator], async (req, res) => {
 
         return res.status(200).json({
             status: 'success',
-            message: 'The cause has been Approved/Disapproved!',
+            message: 'The cause has been Approved!',
             data: _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
                 'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
                 'amount_donated', 'isApproved', 'reason_for_disapproval'
@@ -174,7 +174,7 @@ router.put('/disapprove/:id', [auth, isModerator], async (req, res) => {
 
         return res.status(200).json({
             status: 'success',
-            message: 'The cause has been Approved/Disapproved!',
+            message: 'The cause has been disapproved!',
             data: _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
                 'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
                 'amount_donated', 'isApproved', 'reason_for_disapproval'
@@ -185,6 +185,57 @@ router.put('/disapprove/:id', [auth, isModerator], async (req, res) => {
     }
 });
 
+
+/*
+=================================================================================
+                        Resolve cause (Moderators only)
+=================================================================================
+*/
+router.put('/resolve/:id', [auth, isModerator], async (req, res) => {
+
+    const cause = await Cause.findById(req.params.id);
+
+    cause.isResolved = 1;
+    cause.marked_as_resolved_by = req.user._id;
+    cause.resolved_at = Date.now();
+    cause.save(); 
+
+    /** Email Notification to cause creator
+    ================================================= **/
+
+    //fetch cause creator
+    const user = await User.findById(cause.created_by);
+    
+    // declare email variables
+    const email = user.email;
+    const link = 'http://'+ req.headers.host +'/users/success-story/create/' + cause._id+'/'+token;
+    const subject = "Your Cause - "+cause.cause_title +" has been Resolved!";
+    const emailText = 'Dear '+user.first_name+ ' , Congratulations!. Your Cause' +cause.cause_title+ ' has been Resolved!. Kindly log onto your account and create a success story. We also encourage you to invite your friends to join the platform.';
+    const htmlText = ` 
+                        <p> Dear ${user.first_name},</p>
+                        <p> <b>Congratulations!.</b> Your Cause "${cause.cause_title}" has been Resolved!.</p>
+                        <p>Kindly click <a href="link">here </a> or login to your account at <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> and create a success story.</p>
+                        <p>We also encourage you to invite your friends to join the platform.</p>
+                    `;
+    //send mail
+    mailer({
+        from: '"Caritas" <support.caritas@instiq.com>',
+        to: email,
+        subject: subject,
+        text: emailText,
+        html: htmlText
+    });
+
+
+    return res.status(200).json({
+        status: 'success',
+        message: 'The cause has been Resolved!',
+        data: _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
+            'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
+            'amount_donated', 'isApproved', 'reason_for_disapproval', 'isResolved'
+        ]),
+    });
+});
 /*
 =================================================================================
                        Test endpoint
@@ -192,7 +243,6 @@ router.put('/disapprove/:id', [auth, isModerator], async (req, res) => {
 */
 
 /*
-    //role.includes("Moderator")
     This endpoint is solely for experimentation (for dev use only)
 */
 router.get('/test', async (req, res) => { 
@@ -648,7 +698,8 @@ router.get('/', async (req, res) => {
             created_at: 1,
             share_on_social_media: 1,
             number_of_votes: 1, 
-            amount_donated: 1
+            amount_donated: 1,
+            reason_for_disapproval: 1
         });
 
         if(cause == 0) return res.status(404).json({
