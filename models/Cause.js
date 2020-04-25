@@ -138,6 +138,10 @@ const causeSchema = new mongoose.Schema ({
         type: String,
         default: null,
     },
+
+    success_story_token:{
+        type: String,
+    }
 });
 
 const Cause = mongoose.model('Cause', causeSchema);

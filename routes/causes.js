@@ -11,6 +11,8 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const mailer = require('../helpers/sendMail');
+const jwt = require('jsonwebtoken');
+const config = require('config');
 
 
 /*
@@ -194,28 +196,34 @@ router.put('/disapprove/:id', [auth, isModerator], async (req, res) => {
 router.put('/resolve/:id', [auth, isModerator], async (req, res) => {
 
     const cause = await Cause.findById(req.params.id);
+    
+    //fetch cause creator
+    const user = await User.findById(cause.created_by);
+
+    // generate token
+    const token = jwt.sign({_id: req.user._id, role: user.role}, config.get('jwtPrivateKey'));  
 
     cause.isResolved = 1;
     cause.marked_as_resolved_by = req.user._id;
     cause.resolved_at = Date.now();
+    cause.success_story_token = token;
     cause.save(); 
 
     /** Email Notification to cause creator
     ================================================= **/
 
-    //fetch cause creator
-    const user = await User.findById(cause.created_by);
-    
     // declare email variables
     const email = user.email;
     const link = 'http://'+ req.headers.host +'/users/success-story/create/' + cause._id+'/'+token;
     const subject = "Your Cause - "+cause.cause_title +" has been Resolved!";
-    const emailText = 'Dear '+user.first_name+ ' , Congratulations!. Your Cause' +cause.cause_title+ ' has been Resolved!. Kindly log onto your account and create a success story. We also encourage you to invite your friends to join the platform.';
+    const emailText = 'Dear '+user.first_name+ ' , Congratulations!. Your Cause' +cause.cause_title+ ' has been Resolved!. Kindly click on '+link+' to create a success story. We also encourage you to invite your friends to join the platform.';
     const htmlText = ` 
                         <p> Dear ${user.first_name},</p>
                         <p> <b>Congratulations!.</b> Your Cause "${cause.cause_title}" has been Resolved!.</p>
-                        <p>Kindly click <a href="link">here </a> or login to your account at <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> and create a success story.</p>
+                        <p>Kindly click <a href="${link}">here </a> or login to your account at <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> to create a success story.</p>
                         <p>We also encourage you to invite your friends to join the platform.</p>
+                        <p>Stay safe</p>
+                        <p>Caritas team</p>
                     `;
     //send mail
     mailer({
@@ -224,6 +232,31 @@ router.put('/resolve/:id', [auth, isModerator], async (req, res) => {
         subject: subject,
         text: emailText,
         html: htmlText
+    });
+
+    /** Email Notification to Moderators
+    ================================================= **/
+
+    //find all users who are moderators and return their emails
+    const moderators = await User.find({role: { $all: ['Moderator'] }}).select({ email: 1 });
+    let allModerators = [];
+    moderators.forEach(moderator => {
+        allModerators.push(moderator.email);
+    });
+
+    //get the person that resolved the cause
+    const moderatorInCharge = await User.findById(req.user._id);
+    //send mail
+    mailer({
+        from: '"Caritas" <support.caritas@instiq.com>',
+        to: allModerators,
+        subject: "A new Cause - "+cause.cause_title +" has been Resolved!",
+        text: 'A new Cause '+cause.cause_title+ 'was resolved by '+moderatorInCharge.first_name+' '+moderatorInCharge.last_name+'. Kindly log into your account at http://www.caritas.instiq.com to view.',
+        html: `
+                <p>A new Cause ${cause.cause_title} was resolved by ${moderatorInCharge.first_name} ${moderatorInCharge.last_name}.</p>
+                <p>Kindly log into your account at <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> to view.</p>
+                <p>Warm regards</p>
+            `
     });
 
 
@@ -236,6 +269,8 @@ router.put('/resolve/:id', [auth, isModerator], async (req, res) => {
         ]),
     });
 });
+
+
 /*
 =================================================================================
                        Test endpoint
@@ -245,14 +280,22 @@ router.put('/resolve/:id', [auth, isModerator], async (req, res) => {
 /*
     This endpoint is solely for experimentation (for dev use only)
 */
-router.get('/test', async (req, res) => { 
+router.post('/test',auth, async (req, res) => { 
     // const moderators = await User.find({role: 'Moderator' }).sort({created_at: 1}); //find all users who are moderators and return their roles
-    const moderators = await User.find({role: { $all: ['Moderator'] }}).select({ email: 1 }); //find all users who are moderators and return their roles (used to find two roles simultaneously)
-    let email = [];
+    // const moderators = await User.find({role: { $all: ['Moderator'] }}).select({ email: 1 }); //find all users who are moderators and return their roles (used to find two roles simultaneously)
+    // const token = jwt.sign({_id: req.user._id, role: req.user.role}, config.get('jwtPrivateKey')); 
+    // let email = [];
+    // moderators.forEach(moderator => {
+    //     email.push(moderator.email);
+    // });
+    const moderatorInCharge = await User.findById(req.body.id);
+
+    const moderators = await User.find({role: { $all: ['Moderator'] }}).select({ email: 1 });
+    let allModerators = [];
     moderators.forEach(moderator => {
-        email.push(moderator.email);
+        allModerators.push(moderator.email);
     });
-    return res.send(email);
+    return res.json({firstname: moderatorInCharge.first_name, lastname: moderatorInCharge.last_name});
 });
 
 /*
