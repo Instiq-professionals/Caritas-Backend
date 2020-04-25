@@ -1,11 +1,11 @@
 const auth = require('../middleware/auth');
-const isModerator = require('../middleware/isModerator');
 const _ = require('lodash');
 const {Cause} = require('../models/Cause');
 const {SuccessStory, validate} = require('../models/SuccessStory');
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
+const jwt = require('jsonwebtoken');
+const config = require('config');
 
 
 /*
@@ -101,6 +101,68 @@ router.post('/create', auth, async (req, res) => {
     }
 
 });
+
+/*
+=================================================================================
+                        create success story from email link
+=================================================================================
+*/
+router.post('/create/:token', async (req, res) => {
+    try {
+
+        const token = req.params.token;
+
+        //check if token exits on the database or if token has expired
+        let cause = await Cause.findOne({ success_story_token: token });
+
+        if(!cause) return res.status(400).json({
+            status: 'Bad request',
+            message: 'Invalid token',
+            data:[]
+        });
+
+        //decode token
+        const decoded = jwt.verify(token, config.get('jwtPrivateKey'));
+        req.user = decoded;
+
+        //check if user_id === cause creator
+        if(cause.created_by !== req.user._id) return res.status(403).json({
+            status: 'Access denied',
+            message: "Sorry, you don't have permission to write a success story for this cause",
+            data:[]
+        });
+        
+        /*save data in the user table
+         ============================
+        */
+
+        story = new SuccessStory(_.pick(req.body, [
+            'cause_id', 'testimonial', 'created_at', 'created_by'
+        ]));
+        story.created_by = req.user._id;
+        story.cause_id = cause._id;         
+
+        await story.save();
+
+        //set delete success_story_token
+        cause.success_story_token = null;
+        await cause.save();
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Your story has been recorded successfully!',
+            data: _.pick(cause, ['_id', 'cause_id', 'testimonial', 'created_at', 'created_by']),
+        });
+
+    } catch (e) {
+        console.log(e);
+        return res.status(500).json({
+        success: false,
+        message: "An error occurred while processing your request," + e.message,
+        });
+    }
+});
+
 
 /*
 =================================================================================

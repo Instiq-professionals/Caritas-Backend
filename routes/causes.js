@@ -214,7 +214,7 @@ router.put('/resolve/:id', [auth, isModerator], async (req, res) => {
 
         // declare email variables
         const email = user.email;
-        const link = 'http://'+ req.headers.host +'/users/success-story/create/' + cause._id+'/'+token;
+        const link = 'http://'+ req.headers.host +'/users/success-story/create/'+token;
         const subject = "Your Cause - "+cause.cause_title +" has been Resolved!";
         const emailText = 'Dear '+user.first_name+ ' , Congratulations!. Your Cause' +cause.cause_title+ ' has been Resolved!. Kindly click on '+link+' to create a success story. We also encourage you to invite your friends to join the platform.';
         const htmlText = ` 
