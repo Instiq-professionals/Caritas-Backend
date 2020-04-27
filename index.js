@@ -26,7 +26,7 @@ mongoose.connect('mongodb://localhost/caritas')
 //routes
 // app.use(cors());
 app.use(cors({
-    exposedHeaders: ['x-auth-token'],
+    exposedHeaders: ['x-auth-token', 'token'],
 }));
 app.options('*', cors());
 app.use(express.json());

@@ -113,8 +113,13 @@ const userSchema = new mongoose.Schema ({
     verify_email_token:{
         type: String
     },
+    
     verify_email_token_expires_on:{
         type: Date
+    },
+
+    view_disapproved_cause_token:{
+        type:String
     }
 });
 

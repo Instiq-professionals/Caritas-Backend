@@ -1,5 +1,4 @@
 const auth = require('../middleware/auth');
-const isAdmin = require('../middleware/isAdmin');
 const isModerator = require('../middleware/isModerator');
 const _ = require('lodash');
 const {Cause, validate} = require('../models/Cause');
@@ -101,7 +100,7 @@ router.put('/approve/:id', [auth, isModerator], async (req, res) => {
                         `;
         //send mail
         mailer({
-            from: '"Caritas" <support.caritas@instiq.com>',
+            from: '"Team Caritas" <support.caritas@instiq.com>',
             to: email,
             subject: subject,
             text: emailText,
@@ -125,7 +124,6 @@ router.put('/approve/:id', [auth, isModerator], async (req, res) => {
 /*
 =================================================================================
                         Disapprove causes  
-                        modify message on email body 
 =================================================================================
 */
 
@@ -155,18 +153,35 @@ router.put('/disapprove/:id', [auth, isModerator], async (req, res) => {
         const user = await User.findById(cause.created_by);
         
         // declare email variables
-        let email = user.email;
+        const token = jwt.sign({_id: user._id}, config.get('jwtPrivateKey'));
+        const link = 'http://'+req.headers.host+'/causes/my_cause/'+cause._id+'/'+token;
+
+        user.view_disapproved_cause_token = token;
+        await user.save();
+
+        const email = user.email;
         const subject = "About your cause - " +cause.cause_title;
-        const emailText = 'Dear '+user.first_name+ ',. Your Cause' +cause.cause_title+ ' has been approved for donation. Kindly log onto your account to manage your Cause. We also encourage you to invite your friends to join the platform.';
+        const emailText = 'Hi '+user.first_name+ ","+"\n\nThank you so much for logging a cause on our platform!.\n\nWe have received a high number of applications (causes) in recent times and have reviewed causes similar to your cause. At this time, we are sad to inform you that although we understand your true intent and the proposed objective of your cause; We have decided to move forward with other causes whose objective urgently need our support at this time.\n\nKindly click on "+link+" to see why your cause was disapproved.\n\nThank you for your interest. We encourage you to remain on our platform and contribute to the selection process as we thrive to make an impact on people's lives.\n\nWarm regards\nCaritas Team." ;
         const htmlText = ` 
-                            <p> Dear ${user.first_name},</p>
-                            <p> Congratulations!. Your Cause "${cause.cause_title}" has been approved for donation.</p>
-                            <p>Kindly log onto your account at <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> to manage your Cause.</p>
-                            <p>We also encourage you to invite your friends to join the platform.</p>
+                            <p> Hi ${user.first_name},</p>
+                            <p> Thank you so much for logging a cause on our platform!.</p>
+                            <p>
+                                We have received a high number of applications (causes) in recent times and have reviewed causes similar to your cause. 
+                                At this time, we are sad to inform you that although we understand your true intent and the proposed objective of your cause; 
+                                We’ve decided to move forward with other causes whose objective urgently need our support at this time.
+                            </p>
+                            <p>
+                                Kindly click <a href="${link}">here</a> to see why your cause was disapproved.
+                            </p>
+                            <p>
+                                Thank you for your interest. We encourage you to remain on our platform and contribute to the selection process as we thrive to make an impact on people's lives.
+                            </p>
+                            <p>Warm regards,</p>
+                            <p>Caritas Team.</p>
                         `;
         //send mail
         mailer({
-            from: '"Caritas" <support.caritas@instiq.com>',
+            from: '"Team Caritas" <support.caritas@instiq.com>',
             to: email,
             subject: subject,
             text: emailText,
@@ -188,6 +203,48 @@ router.put('/disapprove/:id', [auth, isModerator], async (req, res) => {
 });
 
 
+/*
+=================================================================================
+                        View reason for disapproval Disapproved cause  
+=================================================================================
+*/
+router.get('/my_causes/disapproved/:id/:token', async(req, res) =>{
+    try{
+        
+        //check if token exists on users document
+        const user = await User.findOne({view_disapproved_cause_token: req.params.token});
+
+        if(!user) return res.status(403).json({
+            status: 'Bad request',
+            message: 'Invalid token',
+            data:[]
+        });
+
+        // get the cause by id supplied
+        const cause = await Cause.findById(req.params.id);
+
+        if(!cause) return res.status(404).json({
+            status: 'Not found',
+            message: 'No cause with the given ID was not found.',
+            data:[]
+        });
+
+        causeDetails = _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
+        'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
+        'amount_donated','isApproved', 'isResolved', 'reason_for_disapproval']);
+
+        user.view_disapproved_cause_token = null;
+        await user.save();
+
+        return res.status(200).send({
+            status: 'success',
+            data: causeDetails
+        });
+
+    }catch(e){
+        console.log(e.message);
+    }
+});
 /*
 =================================================================================
                         Resolve cause (Moderators only)
@@ -227,7 +284,7 @@ router.put('/resolve/:id', [auth, isModerator], async (req, res) => {
                         `;
         //send mail
         mailer({
-            from: '"Caritas" <support.caritas@instiq.com>',
+            from: '"Team Caritas" <support.caritas@instiq.com>',
             to: email,
             subject: subject,
             text: emailText,
@@ -473,7 +530,8 @@ router.get('/my_causes', auth, async (req, res) => {
             amount_required: 1,
             category: 1,
             created_at: 1,
-            share_on_social_media: 1
+            share_on_social_media: 1,
+            reason_for_disapproval: 1
         });
 
         if(cause == 0) return res.status(404).json({
@@ -708,11 +766,26 @@ router.get('/:id', async (req, res) => {
             data:[]
         });
 
-        let causeCreatorDetails = await User.findById(cause.created_by);
+        if(cause.created_by == req.user._id){
+            causeDetails = _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
+                'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
+                'amount_donated','isApproved', 'isResolved', 'reason_for_disapproval']);
+
+            let causeCreatorDetails = await User.findById(cause.created_by);
+            causeCreatorDetails =  _.pick(causeCreatorDetails, '_id', 'first_name', 'last_name', 'email', 'address', 'phone_number',
+                'bank_name', 'account_number', 'account_type', 'account_name' );
+
+            return res.status(200).send({
+                status: 'success',
+                data: [causeDetails, causeCreatorDetails]
+            });
+        }
+        
         causeDetails = _.pick(cause, ['_id', 'cause_title', 'brief_description', 'charity_information','additional_information',
         'cause_photos', 'cause_video', 'amount_required', 'category', 'created_at', 'share_on_social_media', 'number_of_votes', 
         'amount_donated','isApproved', 'isResolved']);
 
+        let causeCreatorDetails = await User.findById(cause.created_by);
         causeCreatorDetails =  _.pick(causeCreatorDetails, '_id', 'first_name', 'last_name', 'email', 'address', 'phone_number',
         'bank_name', 'account_number', 'account_type', 'account_name' );
 
@@ -722,7 +795,7 @@ router.get('/:id', async (req, res) => {
         });
 
     }catch(e){
-        console.log(e);
+        console.log(e.message);
     }
 });
 
