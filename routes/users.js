@@ -46,7 +46,7 @@ router.post('/register', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(user.password, salt);
         user.verify_email_token = token;
-        user.verify_email_token_expires_on = Date.now() + 3600000;  //expires in 1 hour
+        user.verify_email_token_expires_on = Date.now() + 86400000;  //expires in 24 hours
 
         await user.save();
 
@@ -478,7 +478,7 @@ router.post('/generate_verification_token',auth, async (req, res) => {
     //generate a token
     const token = jwt.sign({email: user.email}, config.get('jwtPrivateKey'));
     user.verify_email_token = token;
-    user.verify_email_token_expires_on = Date.now() + 3600000;  //expires in 1 hour
+    user.verify_email_token_expires_on = Date.now() + 86400000;  //expires in 24 hours
 
     await user.save();
 

@@ -12,22 +12,19 @@ const userSchema = new mongoose.Schema ({
     first_name:{
         type: String,
         required: true,
-        minlength: 3,
-        maxlength: 50
+        minlength: 3
     },
 
     last_name:{
         type: String,
         required: true,
-        minlength: 3,
-        maxlength: 50
+        minlength: 3
     },
 
     email:{
         type: String,
         required: true,
         minlength: 3,
-        maxlength: 255,
         unique: true
     },
 
@@ -99,8 +96,7 @@ const userSchema = new mongoose.Schema ({
     password:{
         type: String,
         required: true,
-        minlength: 8,
-        maxlength: 1024
+        minlength: 4
     },
 
     password_reset_token:{
@@ -133,10 +129,10 @@ const User = mongoose.model('User', userSchema);
 
 function validateUser(user){
     const schema = {
-        first_name: Joi.string().min(3).max(50).required(),
-        last_name: Joi.string().min(5).max(50).required(),
-        email: Joi.string().min(5).max(255).required(),
-        password: Joi.string().min(8).max(255).required(),
+        first_name: Joi.string().min(3).required(),
+        last_name: Joi.string().min(5).required(),
+        email: Joi.string().min(5).required(),
+        password: Joi.string().min(4).required(),
         role: Joi.string(),
         address: Joi.string().required(),
         phone_number: Joi.string().required(),
