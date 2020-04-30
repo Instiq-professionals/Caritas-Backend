@@ -22,35 +22,176 @@ const config = require('config');
 
 router.get('/approve_causes',[auth, isModerator], async (req, res) => {
     try{
-        // get all unapproved causes
-        const cause = await Cause.find({deleted_at: null}).sort({created_at: 1})
-        .select({
-            cause_title: 1,
-            brief_description: 1, 
-            charity_information: 1,
-            additional_information: 1,
-            cause_photos: 1, 
-            cause_video: 1,
-            amount_required: 1,
-            category: 1,
-            created_at: 1,
-            amount_donated: 1,
-            isApproved: 1,
-            isResolved: 1,
-            created_by:1
-        });
+        //declare variables for different moderator roles
+        const user = await User.findById(req.user._id);
+        let role = user.role;
+        const food = role.includes("Food");
+        const education = role.includes("Education");
+        const humanRight = role.includes("Human Right");
+        const health = role.includes("Health");
+        const sharedServices = role.includes("Shared Services");
 
-        if(cause == 0) return res.status(404).json({
+        if(food){
+            // get all causes on food
+            const cause = await Cause.find({deleted_at: null, category: 'Food'}).sort({created_at: 1})
+            .select({
+                cause_title: 1,
+                brief_description: 1, 
+                charity_information: 1,
+                additional_information: 1,
+                cause_photos: 1, 
+                cause_video: 1,
+                amount_required: 1,
+                category: 1,
+                created_at: 1,
+                amount_donated: 1,
+                isApproved: 1,
+                isResolved: 1,
+                created_by:1
+            });
+
+            if(cause == 0) return res.status(404).json({
+                status: 'Not found',
+                message: 'No cause found.',
+                data:[]
+            });
+
+            return res.status(200).json({
+                status: 'success',
+                data:  cause,
+            });
+        }
+
+        if(education){
+            // get all causes on food
+            const cause = await Cause.find({deleted_at: null, category: 'Education'}).sort({created_at: 1})
+            .select({
+                cause_title: 1,
+                brief_description: 1, 
+                charity_information: 1,
+                additional_information: 1,
+                cause_photos: 1, 
+                cause_video: 1,
+                amount_required: 1,
+                category: 1,
+                created_at: 1,
+                amount_donated: 1,
+                isApproved: 1,
+                isResolved: 1,
+                created_by:1
+            });
+
+            if(cause == 0) return res.status(404).json({
+                status: 'Not found',
+                message: 'No cause found.',
+                data:[]
+            });
+
+            return res.status(200).json({
+                status: 'success',
+                data:  cause,
+            });
+        }
+
+        if(humanRight){
+            // get all causes on food
+            const cause = await Cause.find({deleted_at: null, category: 'Human Right'}).sort({created_at: 1})
+            .select({
+                cause_title: 1,
+                brief_description: 1, 
+                charity_information: 1,
+                additional_information: 1,
+                cause_photos: 1, 
+                cause_video: 1,
+                amount_required: 1,
+                category: 1,
+                created_at: 1,
+                amount_donated: 1,
+                isApproved: 1,
+                isResolved: 1,
+                created_by:1
+            });
+
+            if(cause == 0) return res.status(404).json({
+                status: 'Not found',
+                message: 'No cause found.',
+                data:[]
+            });
+
+            return res.status(200).json({
+                status: 'success',
+                data:  cause,
+            });
+        }
+
+        if(health){
+            // get all causes on food
+            const cause = await Cause.find({deleted_at: null, category: 'Health'}).sort({created_at: 1})
+            .select({
+                cause_title: 1,
+                brief_description: 1, 
+                charity_information: 1,
+                additional_information: 1,
+                cause_photos: 1, 
+                cause_video: 1,
+                amount_required: 1,
+                category: 1,
+                created_at: 1,
+                amount_donated: 1,
+                isApproved: 1,
+                isResolved: 1,
+                created_by:1
+            });
+
+            if(cause == 0) return res.status(404).json({
+                status: 'Not found',
+                message: 'No cause found.',
+                data:[]
+            });
+
+            return res.status(200).json({
+                status: 'success',
+                data:  cause,
+            });
+        }
+
+        if(sharedServices){
+            // get all causes on food
+            const cause = await Cause.find({deleted_at: null}).sort({created_at: 1})
+            .select({
+                cause_title: 1,
+                brief_description: 1, 
+                charity_information: 1,
+                additional_information: 1,
+                cause_photos: 1, 
+                cause_video: 1,
+                amount_required: 1,
+                category: 1,
+                created_at: 1,
+                amount_donated: 1,
+                isApproved: 1,
+                isResolved: 1,
+                created_by:1
+            });
+
+            if(cause == 0) return res.status(404).json({
+                status: 'Not found',
+                message: 'No cause found.',
+                data:[]
+            });
+
+            return res.status(200).json({
+                status: 'success',
+                data:  cause,
+            });
+        }
+
+        return res.status(404).json({
             status: 'Not found',
             message: 'No cause found.',
             data:[]
         });
-
-        return res.status(200).json({
-            status: 'success',
-            data:  cause,
-        });
-
+        
     }catch(e){
         console.log(e);
     }
@@ -295,7 +436,8 @@ router.put('/resolve/:id', [auth, isModerator], async (req, res) => {
         ================================================= **/
 
         //find all users who are moderators and return their emails
-        const moderators = await User.find({role: { $all: ['Moderator'] }}).select({ email: 1 });
+        const category = cause.category;
+        const moderators = await User.find({role: { $all: ['Moderator', category] }}).select({ email: 1 });
         let allModerators = [];
         moderators.forEach(moderator => {
             allModerators.push(moderator.email);
@@ -346,7 +488,7 @@ router.put('/resolve/:id', [auth, isModerator], async (req, res) => {
     This endpoint is solely for experimentation (for dev use only)
 */
 router.post('/test',auth, async (req, res) => { 
-    // const moderators = await User.find({role: 'Moderator' }).sort({created_at: 1}); //find all users who are moderators and return their roles
+    // const moderators = await User.find({role: 'Moderator' }).sort({created_at: 1}); //find all users who are moderators
     // const moderators = await User.find({role: { $all: ['Moderator'] }}).select({ email: 1 }); //find all users who are moderators and return their roles (used to find two roles simultaneously)
     // const token = jwt.sign({_id: req.user._id, role: req.user.role}, config.get('jwtPrivateKey')); 
     // let email = [];
@@ -468,7 +610,8 @@ router.post('/create', auth, causeMediaUpload, async (req, res) => {
         ================================================= **/
 
         //fetch all moderators and extract their email addresses
-        const moderators = await User.find({role: 'Moderator' }).select({ email: 1 });
+        const category = cause.category;
+        const moderators = await User.find({role: { $all: ['Moderator', category] }}).select({ email: 1 });
         
         // declare email variables
         let email = [];
