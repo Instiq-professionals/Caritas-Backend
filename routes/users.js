@@ -1,4 +1,5 @@
 const auth = require('../middleware/auth');
+const isAdminOrSuperAdmin = require('../middleware/isAdminOrSuperAdmin');
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -11,6 +12,47 @@ const Joi = require('joi');
 const mailer = require('../helpers/sendMail');
 const multer = require("multer");
 
+
+/*
+=================================================================================
+                        fetch all users  
+=================================================================================
+*/
+router.get('/', [auth, isAdminOrSuperAdmin], async (req, res) => { 
+
+  try{
+      // get all causes
+      const users = await User.find({deleted_at: null}).sort({created_at: 1}).select({
+        _id: 1,
+        first_name: 1,
+        last_name: 1,
+        email: 1,
+        role: 1,
+        address: 1,
+        phone_number: 1,
+        bank_name: 1,
+        account_name: 1,
+        account_number: 1,
+        account_type: 1,
+        photo: 1
+      });
+
+      if(!users) return res.status(404).json({
+          status: 'Not found',
+          message: 'No users found.',
+          data:[]
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Users retrieved successfully",
+        data: users
+      });
+    } catch (e) {
+      console.log(e);
+    }
+
+});
 
 /*
 =================================================================================
@@ -117,6 +159,7 @@ router.get("/profile", auth, async (req, res) => {
           "account_number",
           "account_type",
           "account_name",
+          "photo"
         ]),
       });
     } catch (e) {
