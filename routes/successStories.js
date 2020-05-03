@@ -50,7 +50,6 @@ router.get('/', async (req, res) => {
 =================================================================================
 */
 
-// [auth, isAdmin]
 router.post('/create', auth, async (req, res) => { 
 
     try{
@@ -67,6 +66,14 @@ router.post('/create', auth, async (req, res) => {
         if(cause.created_by !== req.user._id) return res.status(403).json({
             status: 'Access denied',
             message: "Sorry, you don't have permission to write a success story for this cause",
+            data:[]
+        });
+
+        //check if success story has been created for a cause
+        const storyExist = await SuccessStory.find({cause_id: cause._id});
+        if(storyExist) return res.status(400).json({
+            status: 'Bad request',
+            message: "Success story already exists for this cause",
             data:[]
         });
 

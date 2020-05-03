@@ -34,7 +34,8 @@ router.get('/', [auth, isAdminOrSuperAdmin], async (req, res) => {
         account_name: 1,
         account_number: 1,
         account_type: 1,
-        photo: 1
+        photo: 1,
+        isEmailVerified: 1
       });
 
       if(!users) return res.status(404).json({
@@ -98,16 +99,16 @@ router.post('/register', async (req, res) => {
 
         const link = 'http://'+ req.headers.host +'/users/verify_email/' + token;
         const subject = "Email Verification";
-        const emailText = 'You are receiving this email because you (or someone else) recently created an account on http://www.caritas.instiq.com with this email address. If it is you, kindly click on the link below to confirm your email address.' + 
+        const emailText = 'You are receiving this email because you (or someone else) recently created an account on http://www.qcare.ng with this email address. If it is you, kindly click on the link below to confirm your email address.' + 
                             link + '\n\n' + 'Please ignore this email if you did not create this account.';
         const htmlText = ` 
-                            <p> You are receiving this email because you (or someone else) recently created an account on <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> with this email address</p>
+                            <p> You are receiving this email because you (or someone else) recently created an account on <a href="http://www.qcare.ng">www.qcare.ng</a> with this email address</p>
                             <p> If it is you, kindly click on the link below to confirm your email address. Please ignore this email if you did not create this account.</p> 
                             <a href = '${link}'> ${link}</a>
                         `;
         //send mail
         mailer({
-            from: '"Caritas" <support.caritas@instiq.com>',
+            from: '"QCare" <info@qcare.ng>',
             to: user.email,
             subject: subject,
             text: emailText,
@@ -129,7 +130,7 @@ router.post('/register', async (req, res) => {
 
 /*
 =================================================================================
-                        Get User Information
+                        Get User profile
 ================================================================================= */
 
 router.get("/profile", auth, async (req, res) => {
@@ -296,6 +297,48 @@ router.post("/profile/update", auth, photoUpload, async (req, res) => {
   }
 });
 
+
+/*
+=================================================================================
+                        Get User by ID
+================================================================================= */
+
+router.get("/:id", [auth, isAdminOrSuperAdmin], async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+  //   console.log("Profile user id", req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "The user does not exist",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User retrieved successfully",
+      data: _.pick(user, [
+        "_id",
+        "first_name",
+        "last_name",
+        "photo",
+        "email",
+        "role",
+        "address",
+        "phone_number",
+        "bank_name",
+        "account_number",
+        "account_type",
+        "account_name",
+        "photo",
+        "isEmailVerified"
+      ]),
+    });
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 /*
 =================================================================================
                         Newsletter subscription
@@ -423,7 +466,7 @@ router.post('/forgot_password', async (req, res) => {
                         `;
         //send mail
         mailer({
-            from: '"Caritas" <support.caritas@instiq.com>',
+            from: '"QCare" <support.caritas@instiq.com>',
             to: req.body.email,
             subject: subject,
             text: emailText,
@@ -527,16 +570,16 @@ router.post('/generate_verification_token',auth, async (req, res) => {
 
     const link = 'http://'+ req.headers.host +'/users/verify_email/' + token;
     const subject = "Email Verification";
-    const emailText = 'You are receiving this email because you (or someone else) recently created an account on http://www.caritas.instiq.com with this email address. If it is you, kindly click on the link below to confirm your email address.' + 
+    const emailText = 'You are receiving this email because you (or someone else) recently created an account on http://www.qcare.ng with this email address. If it is you, kindly click on the link below to confirm your email address.' + 
                         link + '\n\n' + 'Please ignore this email if you did not create this account.';
     const htmlText = ` 
-                        <p> You are receiving this email because you (or someone else) recently created an account on <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> with this email address</p>
+                        <p> You are receiving this email because you (or someone else) recently created an account on <a href="http://www.qcare.ng">www.qcare.ng</a> with this email address</p>
                         <p> If it is you, kindly click on the link below to confirm your email address. Please ignore this email if you did not create this account.</p> 
                         <a href = '${link}'> ${link}</a>
                     `;
     //send mail
     mailer({
-        from: '"Caritas" <support.caritas@instiq.com>',
+        from: '"QCare" <info@qcare.ng>',
         to: user.email,
         subject: subject,
         text: emailText,
