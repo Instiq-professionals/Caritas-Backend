@@ -232,16 +232,16 @@ router.put('/approve/:id', [auth, isModerator], async (req, res) => {
         // declare email variables
         let email = user.email;
         const subject = "Your Cause - "+cause.cause_title +" has been Approved!";
-        const emailText = 'Dear '+user.first_name+ ' , Congratulations!. Your Cause' +cause.cause_title+ ' has been approved for donation. Kindly log onto your account to manage your Cause. We also encourage you to invite your friends to join the platform.';
+        const emailText = 'Dear '+user.first_name+ ' , Congratulations!. Your Cause' +cause.cause_title+ ' has been approved for donation. Kindly log onto your account at www.qcare.ng to manage your Cause. We also encourage you to invite your friends to join the platform.';
         const htmlText = ` 
                             <p> Dear ${user.first_name},</p>
                             <p> Congratulations!. Your Cause "${cause.cause_title}" has been approved for donation.</p>
-                            <p>Kindly log onto your account at <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> to manage your Cause.</p>
+                            <p>Kindly log onto your account at <a href="http://www.qcare.ng">www.qcare.ng</a> to manage your Cause.</p>
                             <p>We also encourage you to invite your friends to join the platform.</p>
                         `;
         //send mail
         mailer({
-            from: '"Team Caritas" <support.caritas@instiq.com>',
+            from: '"QCare.ng" <support.caritas@instiq.com>',
             to: email,
             subject: subject,
             text: emailText,
@@ -302,7 +302,7 @@ router.put('/disapprove/:id', [auth, isModerator], async (req, res) => {
 
         const email = user.email;
         const subject = "About your cause - " +cause.cause_title;
-        const emailText = 'Hi '+user.first_name+ ","+"\n\nThank you so much for logging a cause on our platform!.\n\nWe have received a high number of applications (causes) in recent times and have reviewed causes similar to your cause. At this time, we are sad to inform you that although we understand your true intent and the proposed objective of your cause; We have decided to move forward with other causes whose objective urgently need our support at this time.\n\nKindly click on "+link+" to see why your cause was disapproved.\n\nThank you for your interest. We encourage you to remain on our platform and contribute to the selection process as we thrive to make an impact on people's lives.\n\nWarm regards\nCaritas Team." ;
+        const emailText = 'Hi '+user.first_name+ ","+"\n\nThank you so much for logging a cause on our platform!.\n\nWe have received a high number of applications (causes) in recent times and have reviewed causes similar to your cause. At this time, we are sad to inform you that although we understand your true intent and the proposed objective of your cause; We have decided to move forward with other causes whose objective urgently need our support at this time.\n\nKindly click on "+link+" to see why your cause was disapproved.\n\nThank you for your interest. We encourage you to remain on our platform and contribute to the selection process as we thrive to make an impact on people's lives.\n\nWarm regards\nTeam QCare." ;
         const htmlText = ` 
                             <p> Hi ${user.first_name},</p>
                             <p> Thank you so much for logging a cause on our platform!.</p>
@@ -318,11 +318,11 @@ router.put('/disapprove/:id', [auth, isModerator], async (req, res) => {
                                 Thank you for your interest. We encourage you to remain on our platform and contribute to the selection process as we thrive to make an impact on people's lives.
                             </p>
                             <p>Warm regards,</p>
-                            <p>Caritas Team.</p>
+                            <p>Team QCare.</p>
                         `;
         //send mail
         mailer({
-            from: '"Team Caritas" <support.caritas@instiq.com>',
+            from: '"QCare.ng" <support.caritas@instiq.com>',
             to: email,
             subject: subject,
             text: emailText,
@@ -418,14 +418,14 @@ router.put('/resolve/:id', [auth, isModerator], async (req, res) => {
         const htmlText = ` 
                             <p> Dear ${user.first_name},</p>
                             <p> <b>Congratulations!.</b> Your Cause "${cause.cause_title}" has been Resolved!.</p>
-                            <p>Kindly click <a href="${link}">here </a> or login to your account at <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> to create a success story.</p>
+                            <p>Kindly click <a href="${link}">here </a> or login to your account at <a href="http://www.qcare.ng">www.qcare.ng</a> to create a success story.</p>
                             <p>We also encourage you to invite your friends to join the platform.</p>
                             <p>Stay safe</p>
-                            <p>Caritas team</p>
+                            <p>Team QCare</p>
                         `;
         //send mail
         mailer({
-            from: '"Team Caritas" <support.caritas@instiq.com>',
+            from: '"QCare.ng" <support.caritas@instiq.com>',
             to: email,
             subject: subject,
             text: emailText,
@@ -447,13 +447,13 @@ router.put('/resolve/:id', [auth, isModerator], async (req, res) => {
         const moderatorInCharge = await User.findById(req.user._id);
         //send mail
         mailer({
-            from: '"Caritas" <support.caritas@instiq.com>',
+            from: '"QCare.ng" <support.caritas@instiq.com>',
             to: allModerators,
             subject: "A new Cause - "+cause.cause_title +" has been Resolved!",
-            text: 'A new Cause '+cause.cause_title+ 'was resolved by '+moderatorInCharge.first_name+' '+moderatorInCharge.last_name+'. Kindly log into your account at http://www.caritas.instiq.com to view.',
+            text: 'A new Cause '+cause.cause_title+ 'was resolved by '+moderatorInCharge.first_name+' '+moderatorInCharge.last_name+'. Kindly log into your account at http://www.qcare.ng to view.',
             html: `
                     <p>A new Cause ${cause.cause_title} was resolved by ${moderatorInCharge.first_name} ${moderatorInCharge.last_name}.</p>
-                    <p>Kindly log into your account at <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> to view.</p>
+                    <p>Kindly log into your account at <a href="http://www.qcare.ng">www.qcare.ng</a> to view.</p>
                     <p>Warm regards</p>
                 `
         });
@@ -624,13 +624,13 @@ router.post('/create', auth, causeMediaUpload, async (req, res) => {
         //send mail
         // let link = 'http://'+ req.headers.host +'/users/reset_password/' + token;
         const subject = "A New Cause Was Created";
-        const emailText = 'A new Cause '+cause.cause_title+ ' was created. Please log onto your account at http://www.caritas.instiq.com to review.';
+        const emailText = 'A new Cause '+cause.cause_title+ ' was created. Please log onto your account at http://www.qcare.ng to review.';
         const htmlText = ` 
-                            <p> A new Cause ${cause.cause_title} was created. Please log onto your account at <a href="http://www.caritas.instiq.com">www.caritas.instiq.com</a> to review.</p>
+                            <p> A new Cause ${cause.cause_title} was created. Please log onto your account at <a href="http://www.qcare.ng">www.qcare.ng</a> to review.</p>
                         `;
         //send mail
         mailer({
-            from: '"Caritas" <support.caritas@instiq.com>',
+            from: '"QCare.ng" <support.caritas@instiq.com>',
             to: email,
             subject: subject,
             text: emailText,
